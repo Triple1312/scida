@@ -2,9 +2,9 @@
 
 import 'package:test/test.dart';
 
-import '../../numpy/data/NData.dart';
-import '../../numpy/matrix/Matrix.dart';
-import '../../numpy/vector/Vector.dart';
+import '../../numdart/data/NData.dart';
+import '../../numdart/matrix/Matrix.dart';
+import '../../numdart/vector/Vector.dart';
 
 void main() {
 
@@ -64,6 +64,27 @@ void main() {
       var lu = matrix3.luDecomposition();
       expect(lu.$1.data.flat, [1, 0, 1.5, 1]);
       expect(lu.$2.data.flat, [4, 3, 0, -1.5]);
+    });
+  });
+
+  group("eek", () {
+    test("det", (){
+      var matrix = Matrix(NumNList([4, 1, 0, 2], [2, 2]));
+      expect(matrix.det, 8);
+    });
+    test("eigenvalues", (){
+      var matrix = Matrix(NumNList([4, 1, 2, 3], [2, 2]));
+      expect(matrix.eigenvalues().map((num e) => (e*10000).round()).toList(), [(5 *10000).round(), (2 *10000).round()]);
+    });
+    test("backward Substitution", () {
+      var mmatrix = Matrix(NumNList([1, 2, 3, 0, 2, 5, 0, 0, 3], [3, 3]));
+      var yy = Vector(NumNList([9, 8, 6], [3]));
+      expect(mmatrix.backwardSubstitution(yy).flat, [5, -1, 2]);
+    });
+    test("forward Substitution", () {
+      var matrix = Matrix(NumNList([1, 0, 0, 2, 3, 0, 4, 5, 6], [3, 3]));
+      var y = Vector(NumNList([1, 2, 3], [3]));
+      expect(matrix.forwardSubstitution(y).flat, [1.0, 0.0, -0.16666666666666666]);
     });
   });
 }

@@ -1,6 +1,8 @@
 
 
 
+import 'dart:math';
+
 import '../data/NData.dart';
 import 'NMatrixIteraotors.dart';
 import '../data/NNDarray.dart';
@@ -21,7 +23,6 @@ class Matrix extends NNDarray<num> with NMatrixIteratable implements NDMatharray
   Matrix operator *(num scalar) {
     return Matrix(data * scalar);
   }
-
 
   Matrix operator +(Matrix other) {
     return Matrix(data + other.data);
@@ -121,18 +122,6 @@ class Matrix extends NNDarray<num> with NMatrixIteratable implements NDMatharray
     return columns()[i]; // todo pl optimize
   }
 
-  Matrix gramSchmidt() {
-    List<Vector> basis = [column(0)];
-    for (int i = 1; i < shape[0]; i++) {
-      Vector v = column(i);
-      var x = v;
-      for (int j = 0; j < i; j++) {
-        x = x - v.proj(basis[j]);//(basis[j] * (basis[j].dot(v) / basis[j].dot(basis[j])));
-      }
-      basis.add(x);
-    }
-    return Matrix.columnsInit(basis);
-  }
   
   Matrix.columnsInit(List<Vector> basis) { // todo no idea if works
     List<num> vals = [];
@@ -144,17 +133,25 @@ class Matrix extends NNDarray<num> with NMatrixIteratable implements NDMatharray
     data = NumNList(vals, [basis[0].size, basis.length]);
   }
 
-  (Matrix Q, Matrix R) qrDecomposition() {
-    Matrix Gram = this.gramSchmidt();
-    List<Vector> values = [];
-    for (int i = 0; i < shape[0]; i++) {
-      values.add(Gram.column(i) / Gram.column(i).norm(2));
-    }
-    Matrix Q = Matrix.columnsInit(values);
-    Matrix R = Q.transpose().dot(this);
-    return (Q, R);
+  Matrix.identity(int size) {
+    data = NumNList(List.generate(size * size, (i) => i % (size + 1) == 0 ? 1 : 0), [size, size]);
   }
-  
+
+  String toString() {
+    String ret = "";
+    // change to iterator
+    for (int i = 0; i < shape[0]; i++) {
+      ret += row(i).toString();
+      if (i != shape[0] - 1) {
+        ret += "\n";
+      }
+    }
+    return ret;
+  }
+
+
+  //////////////////// Matrix operations ////////////////////
+
   Matrix transpose() {
     List<num> vals = [];
     for (int i = 0; i < shape[1]; i++) {
@@ -190,20 +187,97 @@ class Matrix extends NNDarray<num> with NMatrixIteratable implements NDMatharray
     return (L, U);
   }
 
-  Matrix.identity(int size) {
-    data = NumNList(List.generate(size * size, (i) => i % (size + 1) == 0 ? 1 : 0), [size, size]);
+  (Matrix Q, Matrix R) qrDecomposition() {
+    Matrix Gram = this.gramSchmidt();
+    List<Vector> values = [];
+    for (int i = 0; i < shape[0]; i++) {
+      values.add(Gram.column(i) / Gram.column(i).norm(2));
+    }
+    Matrix Q = Matrix.columnsInit(values);
+    Matrix R = Q.transpose().dot(this);
+    return (Q, R);
   }
 
-  String toString() {
-    String ret = "";
-    // change to iterator
-    for (int i = 0; i < shape[0]; i++) {
-      ret += row(i).toString();
-      if (i != shape[0] - 1) {
-        ret += "\n";
+  Matrix gramSchmidt() {
+    List<Vector> basis = [column(0)];
+    for (int i = 1; i < shape[0]; i++) {
+      Vector v = column(i);
+      var x = v;
+      for (int j = 0; j < i; j++) {
+        x = x - v.proj(basis[j]);//(basis[j] * (basis[j].dot(v) / basis[j].dot(basis[j])));
+      }
+      basis.add(x);
+    }
+    return Matrix.columnsInit(basis);
+  }
+
+  List<num> eigenvalues({double tol = 0.001, int max_iterations = 10000}) {
+    Matrix A = copy;
+    for (int k = 0; k < max_iterations; k++) {
+      (Matrix, Matrix) QR = A.qrDecomposition();
+      A = QR.$2.dot(QR.$1);
+
+      // check convergence
+      num off_diagonal_norm = 0;
+      for (int i = 0; i < A.shape[0]; i++) {
+        for (int j = 0; j < A.shape[1]; j++) {
+          if (i != j) {
+            off_diagonal_norm += pow(A.get([i, j]), 2);
+          }
+        }
+      }
+      if (sqrt(off_diagonal_norm) < tol) {
+        break;
       }
     }
-    return ret;
+
+    List<num> eeigenvalues = [];
+    for (int i = 0; i < A.shape[0]; i++) {
+      eeigenvalues.add(A.get([i, i]));
+    }
+    return eeigenvalues;
+
+  }
+
+  num get det => luDecomposition().$2.diagonalProduct;
+
+  Vector forwardSubstitution(Vector b) { // todo not tested
+    Vector y = Vector.zeroes(this.shape[0]); // todo shape might be wrong
+    for (int i = 0; i < this.shape[0]; i++) {
+      double sum = 0.0;
+      for (int k = 0; k < i; k++) {
+        sum += get([i, k]) * y[k];
+      }
+      y[i] = (b[i] - sum) / get([i,i]);
+    }
+    return y;
+  }
+
+  Vector backwardSubstitution(Vector y) { // todo not tested
+    Vector x = Vector.zeroes(shape[0]);
+    for(int i = shape[0] -1; i >= 0; i--) {
+      double sum = 0.0;
+      for (int k = i+1; k < shape[0]; k++) {
+        sum += get([i,k]) * x[k];
+      }
+      x[i] = (y[i] - sum) / get([i,i]);
+    }
+    return x;
+  }
+
+  Matrix? get inverse  { // todo test
+    Matrix I = Matrix.identity(shape[0]);
+    (Matrix, Matrix) LU = luDecomposition();
+    Matrix inv = Matrix.zeroes(shape);
+
+    for (int i = 0; i < shape[0]; i++) {
+      Vector y = LU.$1.forwardSubstitution(I.column(i)); // row or column ??
+      Vector x = LU.$2.backwardSubstitution(y);
+      for (int j=0; j < shape[0]; j++) {
+        inv.set([j,i], x[j]);
+      }
+    }
+    return inv;
   }
 
 }
