@@ -1,5 +1,5 @@
 
-part of 'DataFrame.dart';
+part of 'DDataFrame.dart';
 
 class DFColumn<T> extends Iterable<T?>  {
   String name;
@@ -13,6 +13,8 @@ class DFColumn<T> extends Iterable<T?>  {
   get length => _values.length;
 
   get unique => _values.toSet().toList(); // todo could be more efficient maybe
+
+  get vocabulary => _values.toSet();
 
   operator [](int index) {
     _values[index];

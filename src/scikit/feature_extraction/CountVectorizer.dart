@@ -2,7 +2,7 @@
 
 import 'dart:collection';
 
-import '../../pandas/dataframe/DataFrame.dart';
+import '../../pandas/dataframe/DDataFrame.dart';
 import 'Vectorizer.dart';
 
 class Countvectorizer extends Vectorizer {

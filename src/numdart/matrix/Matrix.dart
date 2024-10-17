@@ -1,7 +1,7 @@
 
 
 
-import 'dart:math';
+import 'dart:math' as math;
 
 import '../data/NData.dart';
 import 'NMatrixIteraotors.dart';
@@ -17,6 +17,10 @@ class Matrix extends NNDarray<num> with NMatrixIteratable implements NDMatharray
 
   Matrix.zeroes(List<int> shape) { // todo add other data types
     data = NumNList(new List<num>.filled(shape.fold(1, (a, b) => a* b), 0), shape);
+  }
+
+  Matrix.empty() {
+    data = NumNList([], [0, 0]);
   }
 
   @override
@@ -37,6 +41,14 @@ class Matrix extends NNDarray<num> with NMatrixIteratable implements NDMatharray
   Matrix operator /(num scalar) {
     return Matrix(data / scalar);
   }
+
+  int get rowLength => shape[0];
+
+  int get columnLength => shape[1];
+
+  int get rowCount => shape[1];
+
+  int get columnCount => shape[0];
 
   @override
   NumNDarray cross(NumNDarray other) {
@@ -70,6 +82,8 @@ class Matrix extends NNDarray<num> with NMatrixIteratable implements NDMatharray
   num get diagonalSum {
     return diagonal.sum;
   }
+
+  num get trace => diagonalSum;
 
   num get diagonalProduct {
     return diagonal.product;
@@ -149,6 +163,26 @@ class Matrix extends NNDarray<num> with NMatrixIteratable implements NDMatharray
     return ret;
   }
 
+  void addColumn(List<num> col) {
+    if (col.length != columnLength) {
+      throw ArgumentError("Column length must be equal to column length"); //todo what is this error message
+    }
+    for (int i = rowCount -1; i >= 0; i--) {
+      data.insert(rowLength + i, col[i]);
+    }
+  }
+
+  void addRow(List<num> row) {
+    if (row.length != rowLength) {
+      throw ArgumentError("Row length must be equal to row length"); // todo what is this error message
+    }
+    for (int i = 0; i < columnLength; i++) {
+      data.add(row[i]);
+    }
+    List<int> eek = [rowCount + 1, columnCount];
+    data.reshape(eek);
+  }
+
 
   //////////////////// Matrix operations ////////////////////
 
@@ -222,11 +256,11 @@ class Matrix extends NNDarray<num> with NMatrixIteratable implements NDMatharray
       for (int i = 0; i < A.shape[0]; i++) {
         for (int j = 0; j < A.shape[1]; j++) {
           if (i != j) {
-            off_diagonal_norm += pow(A.get([i, j]), 2);
+            off_diagonal_norm += math.pow(A.get([i, j]), 2);
           }
         }
       }
-      if (sqrt(off_diagonal_norm) < tol) {
+      if (math.sqrt(off_diagonal_norm) < tol) {
         break;
       }
     }
@@ -279,5 +313,19 @@ class Matrix extends NNDarray<num> with NMatrixIteratable implements NDMatharray
     }
     return inv;
   }
+
+  Matrix pow(int k) => new List<int>.generate(k, (i) => i).fold(Matrix.identity(size), (a, b) => a.dot(this)); // todo test
+
+  Matrix cholekyDecomposition() {
+    throw UnimplementedError();
+  }
+
+  int get rank => throw UnimplementedError();
+
+  num exp(num k) {throw UnimplementedError();}
+
+  Matrix log() {throw UnimplementedError();}
+
+  (Matrix, Matrix, Matrix) diagonalization() {throw UnimplementedError();}
 
 }

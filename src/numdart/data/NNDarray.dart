@@ -37,6 +37,8 @@ abstract class NNDarray<T> {
 
   void set(List<int> loc, T value) => data.set(loc, value);
 
+  // void fillUpSize(T value, List<int> shape) => data.fillUpSize(value, shape);
+
 }
 
 abstract class NumNDarray extends NNDarray<num?> {

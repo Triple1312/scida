@@ -1,7 +1,5 @@
 
-
-import '../../numpy/NDarray.dart';
-import '../../pandas/dataframe/DataFrame.dart';
+import '../../pandas/dataframe/DDataFrame.dart';
 import 'package:meta/meta.dart';
 import 'dart:collection';
 

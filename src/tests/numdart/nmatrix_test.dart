@@ -86,5 +86,19 @@ void main() {
       var y = Vector(NumNList([1, 2, 3], [3]));
       expect(matrix.forwardSubstitution(y).flat, [1.0, 0.0, -0.16666666666666666]);
     });
+    test("inverse", () {
+      var invmatrix = Matrix(NumNList([4, 3, 3, 2], [2, 2]));
+      expect(invmatrix.inverse!.flat, [-2, 3, 3, -4]);
+    });
+  });
+
+  group("test space", () {
+    var matrix = Matrix(NumNList([1, 2, 3, 4, 5, 6], [2, 3]));
+    test("get", () {
+      expect(matrix.get([0, 1]), 2);
+    });
+    test("shape", () {
+      expect(matrix.shape, [2, 3]);
+    });
   });
 }

@@ -2,26 +2,16 @@
 
 import 'dart:io';
 
-import 'DDataFrame.dart';
+import 'package:meta/meta.dart';
 
-abstract class DataFrame {
+import '../../numpy/NDarray.dart';
+import '../../numpy/old/multiarray.dart';
+import '../series/series.dart';
 
-  factory DataFrame.from_csv() {
-    return DDataFrame();
-  }
+part 'DFColumn.dart';
+part 'node.dart';
 
-  DataFrame();
-
-
-
-
-
-
-
-}
-
-
-class DDataFrame extends DataFrame {
+class DDataFrame {
   List<DFColumn> _data = [];
   Map<dynamic,int> indeces = {}; // a dict to store the index of a row with a different name
 
@@ -256,7 +246,7 @@ class DDataFrame extends DataFrame {
 
 
   // info(...) todo
-
+  
   DDataFrame transpose() {
     List<List<dynamic>> listed = _data.map((e) => e.asList()).toList();
     List<List<dynamic>> transposed = [];
@@ -388,7 +378,7 @@ class DDataFrame extends DataFrame {
     else {
       throw Exception('Index not found');
     }
-    return null;
+      return null;
   }
 
   // todo doesnt work
@@ -443,7 +433,7 @@ class DDataFrame extends DataFrame {
 
   get rowIterator => _DFRowIteratable(this); // todo no idea if works
 
-// get nodeIterator todo
+  // get nodeIterator todo
 
 }
 

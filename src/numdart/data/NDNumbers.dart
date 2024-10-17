@@ -1,7 +1,5 @@
 
 
-
-
 import 'NData.dart';
 import '../vector/Vector.dart';
 

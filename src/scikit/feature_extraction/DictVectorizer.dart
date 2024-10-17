@@ -1,7 +1,7 @@
 
 
 import '../../numpy/NDarray.dart';
-import '../../pandas/dataframe/DataFrame.dart';
+import '../../pandas/dataframe/DDataFrame.dart';
 import 'Vectorizer.dart';
 
 class DictVectorizer extends Vectorizer{

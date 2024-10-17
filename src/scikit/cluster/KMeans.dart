@@ -3,8 +3,8 @@
 import 'dart:math';
 
 
-import '../../numpy/matrix/Matrix.dart';
-import '../../numpy/vector/Vector.dart';
+import '../../numdart/matrix/Matrix.dart';
+import '../../numdart/vector/Vector.dart';
 import '../algorithms/distance.dart';
 
 class KMeans {

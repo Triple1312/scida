@@ -4,7 +4,7 @@ import '../NDarray.dart';
 
 // maybe just return list ?
 // todo works basically not
-NDarray diff({required List a, int n=1, int axis=-1, int prepend=0, int append=0}) { // todo prepend and append
+NNDarray diff({required List a, int n=1, int axis=-1, int prepend=0, int append=0}) { // todo prepend and append
   var aa = NDarray(values: a);
   int nd = aa.ndim;
   if (nd == 0) {

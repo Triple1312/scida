@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
 
-import '../../pandas/dataframe/DataFrame.dart';
+import '../../pandas/dataframe/DDataFrame.dart';
 
 void main() {
   group("Integer Dataframe Tests:", () {

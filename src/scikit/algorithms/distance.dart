@@ -2,6 +2,9 @@
 import 'dart:math';
 
 
+typedef NumericDistanceFnc = num Function(List<num>, List<num>);
+
+
 num manhattanDistance(List<num> a, List<num> b) {
   if (a.length != b.length) {
     throw Exception('Length of a and b must be equal for manhattan distance');
@@ -45,6 +48,9 @@ num minkowskiDistance(List<num> a, List<num> b, num p) {
   return pow(a.fold(0, (prev, element) => prev + pow((element - b[a.indexOf(element)]).abs(), p)), 1 / p);
 }
 
+
+
+typedef FeatureDistanceFnc = num Function(List<dynamic>, List<dynamic>);
 
 // todo idk what this is
 num jaccardDistance(List<num> a, List<num> b) {

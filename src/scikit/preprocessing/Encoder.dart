@@ -5,7 +5,7 @@ import 'dart:collection';
 import 'package:meta/meta.dart';
 
 import '../../numpy/old/OMatrix.dart';
-import '../../pandas/dataframe/DataFrame.dart';
+import '../../pandas/dataframe/DDataFrame.dart';
 
 abstract class Encoder extends OMatrix<num> {
 
