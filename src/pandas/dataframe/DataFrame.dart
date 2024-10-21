@@ -2,13 +2,75 @@
 
 import 'dart:io';
 
+import '../../numdart/data/NNDarray.dart';
+import '../series/series.dart';
 import 'DDataFrame.dart';
 
 abstract class DataFrame {
 
-  factory DataFrame.from_csv() {
-    return DDataFrame();
+  factory DataFrame.from_csv(String path, {bool inferTypes = false, List<Type> columntypes = const [], bool removePadding = false, String sep=','}) {
+    return DDataFrame.from_csv(path, inferTypes: inferTypes, columntypes: columntypes, removePadding: removePadding, sep: sep);
   }
+
+  factory DataFrame.fromLL(List<List<dynamic>> data, {bool inferTypes = false}) =>
+    DDataFrame.fromLL(data, inferTypes: inferTypes);
+
+
+  factory DataFrame.from_dict(Map<String, Map<int, dynamic>> data, {bool inferTypes = false}) =>
+    DDataFrame.from_dict(data, inferTypes: inferTypes);
+
+  factory DataFrame.from_ndarray(NNDarray ndarray, {bool inferTypes = false}) =>
+    DDataFrame.from_ndarray(ndarray, inferTypes: inferTypes);
+
+  get lenght;
+
+  get shape;
+
+  get size;
+
+  get columns;
+
+  get T => transpose();
+
+  get valueType;
+
+  List<List> as_type(Type type);
+
+  List<List<int?>> asInt();
+
+  List<List<double?>> asDouble();
+
+  List<List<bool?>> asBool();
+
+  List<List<bool>> asBoolZ();
+
+  List<List<String>> asString();
+
+  List<List> asList();
+
+  DataFrame transpose();
+
+  insert({required int loc, required DFColumn column});
+
+  drop({List<int>? labels, int axis = 0, int index = 0,  bool inplace = true});
+
+  dynamic dot({DDataFrame? df, DFColumn? col, Series? ser});
+
+  bool hasColumnName(String name);
+
+  DataFrame copy();
+
+  DFColumn? getColumn(String name);
+
+  int getColumnIndex(String name);
+
+  getColumnByIndex(int index);
+
+  _getRow(int index);
+
+  setColumn(String name, DFColumn column);
+
+  addColumn({DFColumn? column, String? name, List<dynamic>? data});
 
   DataFrame();
 
@@ -63,7 +125,7 @@ class DDataFrame extends DataFrame {
   }
 
   // if NDarray has a specific type, it will be used for all columns // todo not tested at all
-  DDataFrame.from_ndarray(NDarray ndarray ,{bool inferTypes = false}) {
+  DDataFrame.from_ndarray(NNDarray ndarray ,{bool inferTypes = false}) {
     if (ndarray.depth > 2) {
       throw Exception('NDarray must be 1 or 2 dimensional');
     }
@@ -176,8 +238,8 @@ class DDataFrame extends DataFrame {
   }
 
   // since NDarray can not have null and be typed, it will automatically be dynamic
-  NDarray to_ndarray() { // todo maybe try to autofix types
-    NDarray constructWithType(Type t, List values) {
+  NNDarray to_ndarray() { // todo maybe try to autofix types
+    NNDarray constructWithType(Type t, List values) {
       if (t == int) {
         return NDarray<int>(values: values);
       }

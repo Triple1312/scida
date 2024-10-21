@@ -1,22 +1,50 @@
 
 
+import 'dart:collection';
+import 'dart:io';
+
 import '../../numdart/data/NDSparce.dart';
 import '../series/series.dart';
 import 'DDataFrame.dart';
 import 'DataFrame.dart';
 
-class BinDataFrame extends DataFrame {
+class RelationalDataFrame extends DataFrame {
 
-  SparceBinMatrix data;
+  late List<String> columnNames;
 
-  BinDataFrame.from_csv() {
+  late HashMap<String, int> rowNames;
 
+  late SparceBinMatrix data;
+
+  // a dataframe does need to have every column named, row names are optional
+  RelationalDataFrame.from_csv(String path, {String sep=",", List<String> columnNames = const [], List<String> rowNames = const [], String lineSeperator = '\n'}) {
+    var file = File(path).readAsStringSync();
+    List<String> lines = file.split(lineSeperator);
+
+    // set column names if not provided
+    if (columnNames.isEmpty) {
+      this.columnNames = lines[0].split(sep);
+    }
+    else {
+      this.columnNames = columnNames;
+    }
+
+    // setRowNames if not provided
+    for (int i = 0; i < rowNames.length; i++) {
+      rowNames[i] = rowNames[i];
+    }
   }
 
   @override
   addColumn({DFColumn? column, String? name, List? data}) {
-    // TODO: implement addColumn
-    throw UnimplementedError();
+    if (column != null) {
+      columnNames.add(column.name);
+      this.data.addColumnBool(column.asBool());
+    }
+    if (name != null && data != null) {
+      columnNames.add(name);
+      this.data.addColumnBool(data);
+    }
   }
 
   @override
@@ -79,6 +107,7 @@ class BinDataFrame extends DataFrame {
 
   @override
   DFColumn? getColumn(String name) {
+    int index = getColumnIndex(name);
     // TODO: implement getColumn
     throw UnimplementedError();
   }
@@ -91,14 +120,17 @@ class BinDataFrame extends DataFrame {
 
   @override
   int getColumnIndex(String name) {
-    // TODO: implement getColumnIndex
-    throw UnimplementedError();
+    for (int i = 0; i < columnNames.length; i++) {
+      if (columnNames[i] == name) {
+        return i;
+      }
+    }
+    return -1;
   }
 
   @override
   bool hasColumnName(String name) {
-    // TODO: implement hasColumnName
-    throw UnimplementedError();
+    return columnNames.contains(name);
   }
 
   @override
@@ -135,4 +167,9 @@ class BinDataFrame extends DataFrame {
   // TODO: implement valueType
   get valueType => throw UnimplementedError();
 
+  @override
+  List<List<bool>> asBoolZ() {
+    // TODO: implement asBoolZ
+    throw UnimplementedError();
+  }
 }

@@ -11,7 +11,7 @@ class TfIdfVectorizer extends Vectorizer {
   int docCount = 0;
   bool _stopwords;
 
-  // tested tftype: n, t // idftype: t // normtype: n, c
+  // tested tftype: n, t // idftype: t // normtype: n, c // stopwords: language
   TfIdfVectorizer({String tfType = 'n', String idfType = 't', String normType = 'c', String stopwords = ''}) : _normType = normType, _idfType = idfType, _tfType = tfType, _stopwords = stopwords == 'english';
 
   double _calculateTF(double rawTF, double maxTF, int docLength) {

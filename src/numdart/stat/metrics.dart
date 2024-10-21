@@ -17,17 +17,17 @@ num r2Score(List<num> observed, List<num> predicted) {
   return rSquared;
 }
 
-num mse();
-
-num rmse();
-
-num mae();
-
-num mape();
-
-num evs();
-
-num accuracy_score(List<num> observed, List<num> predicted, {bool normalize = true, List<num> sample_weight = const []}) {
-  
-
-}
+// num mse();
+//
+// num rmse();
+//
+// num mae();
+//
+// num mape();
+//
+// num evs();
+//
+// num accuracy_score(List<num> observed, List<num> predicted, {bool normalize = true, List<num> sample_weight = const []}) {
+//
+//
+// }

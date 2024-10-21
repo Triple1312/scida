@@ -1,11 +1,9 @@
 
-
-
 import 'NData.dart';
 
 import 'SortedList.dart';
 
-class SparceBinMatrix extends NData<bool> {
+class SparceBinMatrix extends NData<int> {
 
   @override
   late List<int> shape;
@@ -16,8 +14,8 @@ class SparceBinMatrix extends NData<bool> {
   //
   // }
 
-  SparceBinMatrix(List<int> shape) {
-    this.shape = shape;
+  SparceBinMatrix(int x, int y) {
+    this.shape = [x, y];
     for (int i = 0; i < shape[0]; i++) {
       _values.add(Sortedlist<int>());
     }
@@ -41,8 +39,9 @@ class SparceBinMatrix extends NData<bool> {
   }
 
   @override
-  void operator []=(int index, bool value) {
-    if (value) {
+  void operator []=(int index, int value) {
+    if (value != 0 && value != 1) throw Exception("value must be 0 or 1 in a binary matrix");
+    if (value == 1) {
       if (!_values[index~/shape[1]].contains(index%shape[1])) {
         _values[index~/shape[1]].add(index%shape[1]);
       }
@@ -53,46 +52,49 @@ class SparceBinMatrix extends NData<bool> {
   }
 
   @override
-  void add(bool value) {
+  void add(int value) {
+    if (value != 0 && value != 1) throw Exception("value must be 0 or 1");
     throw UnimplementedError();
   }
 
   @override
-  // TODO: implement copy
   get copy => new SparceBinMatrix.data(_values);
 
   @override
-  void fill(bool value) {
+  void fill(int value) {
+    if (value != 0 && value != 1) throw Exception("value must be 0 or 1");
     // TODO: implement fill
   }
 
   @override
-  void fillRange(int start, int end, bool value) {
+  void fillRange(int start, int end, int value) {
+    if (value != 0 && value != 1) throw Exception("value must be 0 or 1");
     // TODO: implement fillRange
   }
 
   @override
-  void fillna(bool value) {
-    // TODO: implement fillna
+  void fillna(int value) { // todo this matrix has no null values
+    throw Exception("This matrix has no null values");
+
   }
 
   @override
-  List<bool> get flat =>  _values.fold(<bool>[], (a, b) => a+= (new List<int>.generate(shape[1], (i) => i)).fold(<bool>[], (c, d) => <bool>[c..., (b.contains(d)? true: false)]));
+  List<int> get flat =>  _values.fold(<int>[], (a, b) => a+= (new List<int>.generate(shape[1], (i) => i)).fold(<int>[], (c, d) => c+= [(b.contains(d)? 1: 0)]));
 
   @override
-  List<bool> flatten({String order = "C"}) {
+  List<int> flatten({String order = "C"}) {
     if(order == "C") {
       return flat;
     }
     else if (order == "F") { // todo not tested // could be shorter/ more efficient
-      List<bool> ret = [];
+      List<int> ret = [];
       for (int i = 0; i < shape[1]; i++) {
         for (int j = 0; j < shape[0]; j++) {
           if (_values[j].contains(i)) {
-            ret.add(true);
+            ret.add(1);
           }
           else {
-            ret.add(false);
+            ret.add(0);
           }
         }
       }
@@ -104,19 +106,20 @@ class SparceBinMatrix extends NData<bool> {
   }
 
   @override
-  bool get(List<int> loc) {
+  int get(List<int> loc) {
     if (loc.length != 2) throw Exception("loc must be of length 2");
     if (loc[0] >= shape[0] || loc[1] >= shape[1]) throw Exception("loc out of bounds");
     try {
-      return _values[loc[0]].contains(loc[1]);
+      return _values[loc[0]].contains(loc[1]) ? 1 : 0;
     }
     catch(e) {
-      return false;
+      return 0;
     }
   }
 
   @override
-  void insert(int index, bool value) {
+  void insert(int index, int value) {
+    if (value != 0 && value != 1) throw Exception("value must be 0 or 1");
     set([index~/shape[0], index%shape[1]], value);
   }
 
@@ -126,10 +129,11 @@ class SparceBinMatrix extends NData<bool> {
   }
 
   @override
-  void set(List<int> loc, bool value) {
+  void set(List<int> loc, int value) {
+    if (value != 0 && value != 1) throw Exception("value must be 0 or 1");
     if (loc.length != 2) throw Exception("loc must be of length 2");
     if (loc[0] >= shape[0] || loc[1] >= shape[1]) throw Exception("loc out of bounds");
-    if (value) {
+    if (value == 1) {
       if (!_values[loc[0]].contains(loc[1])) {
         _values[loc[0]].add(loc[1]);
       }
@@ -140,13 +144,17 @@ class SparceBinMatrix extends NData<bool> {
   }
 
   @override
-  set values(List<bool> values) {
-    // TODO: implement values
+  set values(List<int> values) {
+    if (values.length != shape[0]*shape[1]) throw Exception("values must have the same length as the matrix");
+    _values = new List.generate(shape[0], (i) => Sortedlist<int>());
   }
-  
-  
-  
-  
-  
-  
+
+  void addColumnInt(List<int> column) {
+
+  }
+
+  void addColumnBool(List<bool> column) {
+
+  }
+
 }

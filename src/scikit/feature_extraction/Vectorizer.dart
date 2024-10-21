@@ -3,7 +3,10 @@ import '../../pandas/dataframe/DDataFrame.dart';
 import 'package:meta/meta.dart';
 import 'dart:collection';
 
+import '../../pandas/dataframe/DataFrame.dart';
+
 abstract class Vectorizer {
+
   @protected
   List<String> vocab = [];
 
@@ -31,10 +34,12 @@ abstract class Vectorizer {
   List<List<double>> transform_column(DFColumn data) => transform(data.asString());
 
   @protected
-  void add_to_vocab(String word) {
+  bool add_to_vocab(String word) {
     if (!vocab.contains(word)) {
       vocab.add(word);
+      return true;
     }
+    return false;
   }
 
 }

@@ -239,7 +239,7 @@ class DFColumn<T> extends Iterable<T?>  {
 
   List<double?> asDouble() => _values.map((e) => e != null? valueType == String? double.tryParse(e as String) : e as double : null).toList();
 
-  List<bool?> asBool() => _values.map((e) => e != 'false' && e != '0' && e != '' && e != 'null' && e != 'False' && e != 0 && e != 0.0).toList();
+  List<bool> asBool() => _values.map((e) => e != 'false' && e != '0' && e != '' && e != 'null' && e != 'False' && e != 0 && e != 0.0).toList();
 
 
   //////////////////////////////////// ITERATOR ////////////////////////////////////

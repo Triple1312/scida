@@ -74,6 +74,11 @@ class NDList<T> extends DelegatingList<T> implements NData<T>{
     // TODO: implement set
   }
 
+  @override
+  set values(List<T> values) {
+    // TODO: implement values
+  }
+
 
 
 

@@ -19,6 +19,11 @@ class Matrix extends NNDarray<num> with NMatrixIteratable implements NDMatharray
     data = NumNList(new List<num>.filled(shape.fold(1, (a, b) => a* b), 0), shape);
   }
 
+  // @override
+  // Vector operator *(num vec) {
+  //   return row(vec);
+  // }
+
   Matrix.empty() {
     data = NumNList([], [0, 0]);
   }
