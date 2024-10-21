@@ -1,8 +1,6 @@
 
 
 import 'package:test/test.dart';
-
-import '../../numdart/data/NData.dart';
 import '../../numdart/new_data/Matrix.dart';
 import '../../numdart/new_data/Vector.dart';
 
@@ -88,7 +86,7 @@ void main() {
     });
     test("forward Substitution", () {
       var matrix = Matrix.flat([1, 0, 0, 2, 3, 0, 4, 5, 6], 3, 3);
-      var y = Vector(NumNList([1, 2, 3], [3]));
+      var y = Vector([1, 2, 3]);
       expect(matrix.forwardSubstitution(y).flat, [1.0, 0.0, -0.16666666666666666]);
     });
     test("inverse", () {
