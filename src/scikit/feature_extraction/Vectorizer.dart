@@ -1,9 +1,7 @@
 
-import '../../pandas/dataframe/DDataFrame.dart';
 import 'package:meta/meta.dart';
 import 'dart:collection';
 
-import '../../pandas/dataframe/DataFrame.dart';
 
 abstract class Vectorizer {
 
@@ -19,19 +17,19 @@ abstract class Vectorizer {
 
   String? translate(int index) => vocab[index];
 
-  List<List<double>> fit_transform(List<String> documents, {bool sorted = false});
+  List<List<num>> fit_transform(List<String> documents, {bool sorted = false});
 
   void fit(List<String> documents, {bool sorted = false});
 
-  List<List<double>> transform(List<String> documents);
+  List<List<num>> transform(List<String> documents);
 
-  void fit_df(DataFrame data, String columnName) => fit(data.getColumn(columnName)!.asString());
+  // void fit_df(DataFrame data, String columnName) => fit(data.getColumn(columnName)!.asString());
 
-  void fit_column(DFColumn data) => fit(data.asString());
+  // void fit_column(DFColumn data) => fit(data.asString());
 
-  List<List<double>> transform_df(DataFrame data, String columnName) => transform(data.getColumn(columnName)!.asString());
+  // List<List<num>> transform_df(DataFrame data, String columnName) => transform(data.getColumn(columnName)!.asString());
 
-  List<List<double>> transform_column(DFColumn data) => transform(data.asString());
+  // List<List<num>> transform_column(DFColumn data) => transform(data.asString());
 
   @protected
   bool add_to_vocab(String word) {

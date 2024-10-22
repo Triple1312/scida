@@ -152,7 +152,7 @@ class Matrix<T extends num> extends Iterable<Vector<T>> implements Tensor<T> {
   Matrix<num> dot(Matrix other) {
     Matrix met = Matrix.flat(this.flat, shape[0], shape[1]);
     for (int i = 0; i < shape[0]; i++) {
-      for (int j = 0; j < shape[1]; j++) {
+      for (int j = 0; j < other.shape[1]; j++) {
         num sum = 0;
         for (int k = 0; k < shape[1]; k++) {
           sum += get([i,k]) * other.get([k,j]);

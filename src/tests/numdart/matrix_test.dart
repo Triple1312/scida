@@ -104,4 +104,12 @@ void main() {
       expect(matrix.shape, [2, 3]);
     });
   });
+
+  group("test dot", () {
+    var matrix = Matrix.flat([1, 2, 3, 4, 5, 6], 2, 3);
+    var matrix2 = Matrix.flat([1, 2, 3, 4, 5, 6], 3, 2);
+    test("dot", () {
+      expect(matrix.dot(matrix2).flat, [9, 12, 15, 19, 26, 33, 29, 40, 51]);
+    });
+  });
 }

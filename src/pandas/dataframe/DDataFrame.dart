@@ -4,8 +4,7 @@ import 'dart:io';
 
 import 'package:meta/meta.dart';
 
-import '../../numpy/NDarray.dart';
-import '../../numpy/old/multiarray.dart';
+
 import '../series/series.dart';
 
 part 'DFColumn.dart';

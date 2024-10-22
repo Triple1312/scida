@@ -1,6 +1,7 @@
 
 import 'dart:collection';
 import 'dart:math';
+import '../../numdart/new_data/Matrix.dart';
 import 'Vectorizer.dart';
 import '../utils/stopwords.dart';
 
@@ -10,6 +11,9 @@ class TfIdfVectorizer extends Vectorizer {
   String _normType;
   int docCount = 0;
   bool _stopwords;
+
+  List<List<num>> fitMatrix = [];
+  HashMap<String, double> idfValues = new HashMap<String, double>();
 
   // tested tftype: n, t // idftype: t // normtype: n, c // stopwords: language
   TfIdfVectorizer({String tfType = 'n', String idfType = 't', String normType = 'c', String stopwords = ''}) : _normType = normType, _idfType = idfType, _tfType = tfType, _stopwords = stopwords == 'english';
@@ -48,63 +52,27 @@ class TfIdfVectorizer extends Vectorizer {
   // different than other fit methods, resets vocab and doc count
   @override
   void fit(List<String> documents, {bool sorted = false} ) { // should not be called directly but possible if necessary // todo
-    docCount = documents.length;
-    var uniqueTerms = Set<String>();
-    for (var i = 0; i < documents.length; i++) {
-      List<String> terms = documents[i].split(" ");
-      if (_stopwords) {
-        terms = terms.where((term) => !ENGLISH_STOP_WORDS.contains(term)).toList();
-      }
-      uniqueTerms.addAll(terms);
-    }
-    this.vocab = uniqueTerms.toList();
+    fit_transform(documents, sorted: sorted);
   }
 
 
 
   @override
-  List<List<double>> transform(List<String> documents) {
-    // TODO: implement transform
-    throw UnimplementedError();
-  }
-
-  @override
-  List<List<double>> fit_transform(List<String> documents, {bool sorted = false}) {
-    docCount = documents.length;
-    var termDocs = HashMap<String, Set<int>>();
-    HashMap<String, double> idfScores = HashMap<String, double>();
-
-
-    var uniqueTerms = Set<String>(); // needed ??
-
+  List<List<num>> transform(List<String> documents) {
+    List<List<int>> termDocs = [];
     for (var i = 0; i < documents.length; i++) {
+      List<int> tmp_count = [];
       List<String> terms = documents[i].split(" ");
       if (_stopwords) {
         terms = terms.where((term) => !ENGLISH_STOP_WORDS.contains(term)).toList();
       }
-      uniqueTerms = Set<String>.from(terms);
-      uniqueTerms.forEach((term) {
-        (termDocs[term] ??= {}).add(i);
-      });
-    }
-    termDocs.forEach((term, docs) {
-      idfScores[term] = _calculateIDF(docs.length);
-    });
-
-    for (var i = 0; i < documents.length; i++) {
-      List<String> terms = documents[i].split(" ");
-      if (_stopwords) {
-        terms = terms.where((term) => !ENGLISH_STOP_WORDS.contains(term)).toList();
+      for (String vocabTerm in vocab) {
+        tmp_count.add(terms.where((term) => term == vocabTerm).toList().length);
       }
-      uniqueTerms.addAll(terms);
+      termDocs.add(tmp_count);
     }
 
-    vocab = uniqueTerms.toList(); // this is the order
-    if (sorted) {
-      vocab.sort();
-    }
-
-    return documents.map((doc) {
+    List<List<num>> tmp_matrix =  documents.map((doc) {
       // Split the document into terms and optionally filter out stop words.
       List<String> rawTerms = doc.split(" ");
       List<String> terms = _stopwords ? rawTerms.where((term) => !ENGLISH_STOP_WORDS.contains(term)).toList() : rawTerms;
@@ -121,13 +89,82 @@ class TfIdfVectorizer extends Vectorizer {
       // Create the TF-IDF vector for the document.
       Map<String, double> tfidfVector = termFreqs.map((term, count) {
         double tf = _calculateTF(count.toDouble(), terms.length.toDouble(), maxTF);
-        return MapEntry(term, tf * (idfScores[term] ?? 0.0));
+        return MapEntry(term, tf * (idfValues[term] ?? 0.0));
       });
 
       // Normalize the TF-IDF vector and convert it into a list using the vocabulary.
       double norm = sqrt(tfidfVector.values.map((x) => x * x).reduce((a, b) => a + b));
       return vocab.map((word) => (tfidfVector[word] ?? 0.0) / norm).toList();
     }).toList();
+
+    return tmp_matrix;
+
+  }
+
+  @override
+  List<List<num>> fit_transform(List<String> documents, {bool sorted = false}) {
+    docCount = documents.length;
+    var termDocs = HashMap<String, Set<int>>();
+    // HashMap<String, double> idfScores = HashMap<String, double>();
+
+
+    var uniqueTerms = Set<String>(); // needed ??
+
+    for (var i = 0; i < documents.length; i++) {
+      List<String> terms = documents[i].split(" ");
+      if (_stopwords) {
+        terms = terms.where((term) => !ENGLISH_STOP_WORDS.contains(term)).toList();
+      }
+      uniqueTerms = Set<String>.from(terms);
+      uniqueTerms.forEach((term) {
+        (termDocs[term] ??= {}).add(i);
+      });
+    }
+    termDocs.forEach((term, docs) {
+      idfValues[term] = _calculateIDF(docs.length);
+    });
+
+    for (var i = 0; i < documents.length; i++) {
+      List<String> terms = documents[i].split(" ");
+      if (_stopwords) {
+        terms = terms.where((term) => !ENGLISH_STOP_WORDS.contains(term)).toList();
+      }
+      uniqueTerms.addAll(terms);
+    }
+
+    vocab = uniqueTerms.toList(); // this is the order
+    if (sorted) {
+      vocab.sort();
+    }
+
+    List<List<num>> tmp_matrix =  documents.map((doc) {
+      // Split the document into terms and optionally filter out stop words.
+      List<String> rawTerms = doc.split(" ");
+      List<String> terms = _stopwords ? rawTerms.where((term) => !ENGLISH_STOP_WORDS.contains(term)).toList() : rawTerms;
+
+      // Calculate term frequencies in one pass.
+      Map<String, int> termFreqs = {};
+      for (var term in terms) {
+        termFreqs[term] = (termFreqs[term] ?? 0) + 1;
+      }
+
+      // Determine the maximum term frequency for normalization.
+      int maxTF = termFreqs.values.reduce(max);
+
+      // Create the TF-IDF vector for the document.
+      Map<String, double> tfidfVector = termFreqs.map((term, count) {
+        double tf = _calculateTF(count.toDouble(), terms.length.toDouble(), maxTF);
+        return MapEntry(term, tf * (idfValues[term] ?? 0.0));
+      });
+
+      // Normalize the TF-IDF vector and convert it into a list using the vocabulary.
+      double norm = sqrt(tfidfVector.values.map((x) => x * x).reduce((a, b) => a + b));
+      return vocab.map((word) => (tfidfVector[word] ?? 0.0) / norm).toList();
+    }).toList();
+
+    fitMatrix = tmp_matrix;
+
+    return tmp_matrix;
 
 
     // what code was faster? todo test
