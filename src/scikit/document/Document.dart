@@ -16,12 +16,8 @@ abstract class Document {
       DefaultDocument.open(filepath);
 
 
-
-
-
-
-
-
+  factory Document.from_csv(String filepath, [String seperator = ',']) =>
+      DefaultDocument(filepath, seperator);
 }
 
 
@@ -44,7 +40,11 @@ class DefaultDocument implements Document {
 
   }
 
-  
+  DefaultDocument.from_csv(String filepath, [String seperator = ',']) {
+    File file = new File(filepath);
+    file.open();
+    List<String> lines = file.readAsLinesSync();
+  }
 
 }
 
@@ -72,3 +72,20 @@ class ClosedDocument implements Document {
   }
 
 }
+
+// class CSVDocument extends Document {
+//
+//   String contents;
+//
+//   CSVDocument(String filepath, [String seperator = ',']) {
+//     File file = new File(filepath);
+//     file.open();
+//     List<String> lines = file.readAsLinesSync();
+//   }
+//   @override
+//   String contents;
+//
+//   @override
+//   String filename;
+//
+// }

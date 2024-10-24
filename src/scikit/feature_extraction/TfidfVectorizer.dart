@@ -2,6 +2,7 @@
 import 'dart:collection';
 import 'dart:math';
 import '../../numdart/new_data/Matrix.dart';
+import '../../numdart/new_data/Vector.dart';
 import 'Vectorizer.dart';
 import '../utils/stopwords.dart';
 
@@ -182,6 +183,35 @@ class TfIdfVectorizer extends Vectorizer {
     // });
     //
     // return eek.map((doc) => vocab.map((word) => doc[word] ?? 0.0).toList()).toList();
+  }
+
+  List<(int, num)> query(String query, [int k = 10]) {
+    List<num> queryVector = transform([query])[0];
+    List<(int, num)> scores = [];
+    num min = 0;
+    Vector vec = Vector(queryVector);
+    for (int i = 0; i < fitMatrix.length; i++) {
+      Vector tmp_vec = Vector(fitMatrix[i]);
+      /// cosine similarity
+      num sim = tmp_vec.dot(vec) / (tmp_vec.norm(2) * vec.norm(2));
+      if (sim < min) continue;
+      if (scores.length < k) {scores.add((i, sim)); continue;};
+
+      for (int t = 0;  t <  scores.length; t++) {
+        if (scores[t].$2 <= min) {
+          scores[t] = (i, sim);
+          min = 999999999;
+          for (var y in scores) {
+            if (y.$2 < min) {
+              min = y.$2;
+            }
+          }
+        }
+      }
+
+    }
+    scores.sort( (a, b) => a.$2.compareTo(b.$2));
+    return scores;
   }
 
   translate(int index) {

@@ -1,7 +1,7 @@
 
 
 
-class PositionalIndex {
+class PositionalIndexer {
 
   String word;
 
@@ -9,7 +9,7 @@ class PositionalIndex {
 
   List<List<int>> positions;
 
-  PositionalIndex(this.word): frequency = 0, positions = [];
+  PositionalIndexer(this.word): frequency = 0, positions = [];
 
   void addDocumentPositions(List<int> docPositions) {
     frequency+=docPositions.length;

@@ -18,8 +18,8 @@ abstract class DataFrame {
   factory DataFrame.from_dict(Map<String, Map<int, dynamic>> data, {bool inferTypes = false}) =>
     DDataFrame.from_dict(data, inferTypes: inferTypes);
 
-  factory DataFrame.from_ndarray(NNDarray ndarray, {bool inferTypes = false}) =>
-    DDataFrame.from_ndarray(ndarray, inferTypes: inferTypes);
+  // factory DataFrame.from_ndarray(NNDarray ndarray, {bool inferTypes = false}) =>
+  //   DDataFrame.from_ndarray(ndarray, inferTypes: inferTypes);
 
   get lenght;
 
@@ -53,7 +53,7 @@ abstract class DataFrame {
 
   drop({List<int>? labels, int axis = 0, int index = 0,  bool inplace = true});
 
-  dynamic dot({DDataFrame? df, DFColumn? col, Series? ser});
+  // dynamic dot({DDataFrame? df, DFColumn? col, Series? ser});
 
   bool hasColumnName(String name);
 
@@ -72,6 +72,12 @@ abstract class DataFrame {
   addColumn({DFColumn? column, String? name, List<dynamic>? data});
 
   DataFrame();
+
+  all() {}
+
+  any();
+
+  count();
 
 
 
@@ -123,33 +129,33 @@ class DDataFrame extends DataFrame {
     }
   }
 
-  // if NDarray has a specific type, it will be used for all columns // todo not tested at all
-  DDataFrame.from_ndarray(NNDarray ndarray ,{bool inferTypes = false}) {
-    if (ndarray.depth > 2) {
-      throw Exception('NDarray must be 1 or 2 dimensional');
-    }
-    List<List> ndvalues = ndarray.data;
-    Type narraytype = ndarray.valueType;
-    if (narraytype == dynamic && inferTypes) {
-      _data = List.generate(ndvalues.length, (index) => DFColumn.autoInferType("Column_${index.toString()}", ndvalues[index]));
-    }
-    else if(narraytype == dynamic) {
-      _data = List.generate(ndvalues.length, (index) => DFColumn("Column_${index.toString()}", values: ndvalues[index]));
-    }
-    else if(narraytype == int) {
-      _data = List.generate(ndvalues.length, (index) => DFColumn<int>("Column_${index.toString()}", values: ndvalues[index] as List<int>));
-    }
-    else if(narraytype == double) {
-      _data = List.generate(ndvalues.length, (index) => DFColumn<double>("Column_${index.toString()}", values: ndvalues[index] as List<double>));
-    }
-    else if(narraytype == bool) {
-      _data = List.generate(ndvalues.length, (index) => DFColumn<bool>("Column_${index.toString()}", values: ndvalues[index] as List<bool>));
-    }
-    else if(narraytype == String) {
-      _data = List.generate(ndvalues.length, (index) => DFColumn<String>("Column_${index.toString()}", values: ndvalues[index] as List<String>));
-    }
-
-  }
+  // // if NDarray has a specific type, it will be used for all columns // todo not tested at all
+  // DDataFrame.from_ndarray(NNDarray ndarray ,{bool inferTypes = false}) {
+  //   if (ndarray.depth > 2) {
+  //     throw Exception('NDarray must be 1 or 2 dimensional');
+  //   }
+  //   List<List> ndvalues = ndarray.data;
+  //   Type narraytype = ndarray.valueType;
+  //   if (narraytype == dynamic && inferTypes) {
+  //     _data = List.generate(ndvalues.length, (index) => DFColumn.autoInferType("Column_${index.toString()}", ndvalues[index]));
+  //   }
+  //   else if(narraytype == dynamic) {
+  //     _data = List.generate(ndvalues.length, (index) => DFColumn("Column_${index.toString()}", values: ndvalues[index]));
+  //   }
+  //   else if(narraytype == int) {
+  //     _data = List.generate(ndvalues.length, (index) => DFColumn<int>("Column_${index.toString()}", values: ndvalues[index] as List<int>));
+  //   }
+  //   else if(narraytype == double) {
+  //     _data = List.generate(ndvalues.length, (index) => DFColumn<double>("Column_${index.toString()}", values: ndvalues[index] as List<double>));
+  //   }
+  //   else if(narraytype == bool) {
+  //     _data = List.generate(ndvalues.length, (index) => DFColumn<bool>("Column_${index.toString()}", values: ndvalues[index] as List<bool>));
+  //   }
+  //   else if(narraytype == String) {
+  //     _data = List.generate(ndvalues.length, (index) => DFColumn<String>("Column_${index.toString()}", values: ndvalues[index] as List<String>));
+  //   }
+  //
+  // }
 
   DDataFrame({ // todo should really do something
     Object? data,
@@ -237,46 +243,46 @@ class DDataFrame extends DataFrame {
   }
 
   // since NDarray can not have null and be typed, it will automatically be dynamic
-  NNDarray to_ndarray() { // todo maybe try to autofix types
-    NNDarray constructWithType(Type t, List values) {
-      if (t == int) {
-        return NDarray<int>(values: values);
-      }
-      else if (t == double) {
-        return NDarray<double>(values: values);
-      }
-      else if (t == bool) {
-        return NDarray<bool>(values: values);
-      }
-      else if (t == String) {
-        return NDarray<String>(values: values);
-      }
-      else {
-        return NDarray(values: values);
-      }
-    }
-
-    Type type = _data[0].valueType;
-    for (int i=1; i < _data.length; i++) {
-      if (_data[i].valueType != type) {
-        if (type == double && _data[i].valueType == int) {
-          type = double;
-        }
-        else if (type == int && _data[i].valueType == double) {
-          type = double;
-        }
-        else {
-          type = dynamic;
-          break;
-        }
-      }
-      else if(_data[i].all() != true) {
-        type = dynamic;
-        break;
-      }
-    }
-    return constructWithType(type, asList());
-  }
+  // NNDarray to_ndarray() { // todo maybe try to autofix types
+  //   NNDarray constructWithType(Type t, List values) {
+  //     if (t == int) {
+  //       return NDarray<int>(values: values);
+  //     }
+  //     else if (t == double) {
+  //       return NDarray<double>(values: values);
+  //     }
+  //     else if (t == bool) {
+  //       return NDarray<bool>(values: values);
+  //     }
+  //     else if (t == String) {
+  //       return NDarray<String>(values: values);
+  //     }
+  //     else {
+  //       return NDarray(values: values);
+  //     }
+  //   }
+  //
+  //   Type type = _data[0].valueType;
+  //   for (int i=1; i < _data.length; i++) {
+  //     if (_data[i].valueType != type) {
+  //       if (type == double && _data[i].valueType == int) {
+  //         type = double;
+  //       }
+  //       else if (type == int && _data[i].valueType == double) {
+  //         type = double;
+  //       }
+  //       else {
+  //         type = dynamic;
+  //         break;
+  //       }
+  //     }
+  //     else if(_data[i].all() != true) {
+  //       type = dynamic;
+  //       break;
+  //     }
+  //   }
+  //   return constructWithType(type, asList());
+  // }
 
   // to_records(...) todo
 
@@ -388,27 +394,27 @@ class DDataFrame extends DataFrame {
 
 
 
-  dynamic dot({DDataFrame? df, DFColumn? col, Series? ser}) { // todo make listType so Columns work too | returnTypes are weird maybe
-    // check if no arguments ar provided
-    if (df == null && col == null && ser == null) {
-      throw Exception('No data provided');
-    }
-    // check if 2 arguments are provided
-    if ((df != null && col != null) || df != null && ser != null || col != null && ser != null) {
-      throw Exception('Only 2 arguments can be provided');
-    }
-    if (df != null) {
-      return DDataFrame.fromLL(mdot(as_type(int) as List<List<int>>, df.as_type(int) as List<List<int>>));
-    }
-
-    if (col != null) {
-      return Series(ldata: (mvdot(mat: as_type(int) as List<List<int>>, vec: col.asInt() as List<int>)));
-    }
-
-    if (ser != null) {
-      return DFColumn<int>('', values: mvdot(mat: as_type(int) as List<List<int>>, vec: ser.asInt()));
-    }
-  }
+  // dynamic dot({DDataFrame? df, DFColumn? col, Series? ser}) { // todo make listType so Columns work too | returnTypes are weird maybe
+  //   // check if no arguments ar provided
+  //   if (df == null && col == null && ser == null) {
+  //     throw Exception('No data provided');
+  //   }
+  //   // check if 2 arguments are provided
+  //   if ((df != null && col != null) || df != null && ser != null || col != null && ser != null) {
+  //     throw Exception('Only 2 arguments can be provided');
+  //   }
+  //   if (df != null) {
+  //     return DDataFrame.fromLL(mdot(as_type(int) as List<List<int>>, df.as_type(int) as List<List<int>>));
+  //   }
+  //
+  //   if (col != null) {
+  //     return Series(ldata: (mvdot(mat: as_type(int) as List<List<int>>, vec: col.asInt() as List<int>)));
+  //   }
+  //
+  //   if (ser != null) {
+  //     return DFColumn<int>('', values: mvdot(mat: as_type(int) as List<List<int>>, vec: ser.asInt()));
+  //   }
+  // }
 
   bool hasColumnName(String name) {
     return _data.map((e) => e.name).contains(name);
@@ -502,7 +508,17 @@ class DDataFrame extends DataFrame {
 
   get columnIterator => _DFColumnIteratable(this); // todo no idea if works
 
-  get rowIterator => _DFRowIteratable(this); // todo no idea if works
+  get rowIterator => _DFRowIteratable(this);
+
+  @override
+  List<List<bool>> asBoolZ() {
+    // TODO: implement asBoolZ
+    throw UnimplementedError();
+  }
+
+  @override
+  // TODO: implement lenght
+  get lenght => throw UnimplementedError(); // todo no idea if works
 
 // get nodeIterator todo
 
