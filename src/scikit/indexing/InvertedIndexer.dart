@@ -4,16 +4,19 @@ import 'dart:collection';
 
 import '../document/Document.dart';
 
-class InvertedIndices {
+class InvertedIndexer {
 
   HashMap<String, List<int>> invertedIndex = HashMap<String, List<int>>();
 
   List<Document> docs = [];
 
+  int fileIndexStart = 0;
+
   List<String> voc = [];
 
-  void fit(List<Document> documents) {
-    for (int i = 0; i < documents.length; i++) {
+  void fit(List<Document> documents, {int fileIndexStart = 0}) {
+    this.fileIndexStart = fileIndexStart;
+    for (int i = fileIndexStart; i < documents.length + fileIndexStart; i++) {
       docs.add(documents[i]);
       List<String> terms = documents[i].contents.split(" ");
       for (String term in terms) {
@@ -31,8 +34,8 @@ class InvertedIndices {
   List<Document> query(String query) =>
     query_list(query.split(" "));
 
-  List<Document> query_list(List<String> query) {
-    List<int> doc_indeces = List<int>.generate(docs.length, (i) => i);
+  List<Document> query_list(List<String> query) { // todo check indices with start
+    List<int> doc_indeces = List<int>.generate(docs.length, (i) => i + fileIndexStart);
     for (String term in query) {
       List<int> new_indeces = [];
       if (voc.contains(term)) {
@@ -51,6 +54,15 @@ class InvertedIndices {
       }
     }
     return doc_indeces.map((i) => docs[i]).toList();
+  }
+
+  int documentIndex(String documentName) {
+    for (int i = 0; i < docs.length; i++) {
+      if (docs[i].filename == documentName) {
+        return i + fileIndexStart;
+      }
+    }
+    return -1;
   }
 
 }
