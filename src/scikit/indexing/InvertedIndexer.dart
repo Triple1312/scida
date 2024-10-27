@@ -65,4 +65,17 @@ class InvertedIndexer {
     return -1;
   }
 
+  String toJson() {
+    String json = "{\"invertedIndex\": {";
+    for (String term in invertedIndex.keys) {
+      json += "\"$term\": [";
+      for (int i in invertedIndex[term]!) {
+        json += "$i,";
+      }
+      json = json.substring(0, json.length - 1);
+      json += "],";
+    }
+    json = json.substring(0, json.length - 1);
+  }
+
 }

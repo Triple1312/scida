@@ -1,0 +1,20 @@
+
+
+
+class QueryPerformanceAnalyser {
+
+
+  QueryPerformanceAnalyser() {
+
+  }
+
+
+
+
+
+
+
+
+
+
+}

@@ -41,11 +41,11 @@ class Vector<T extends num> implements Tensor<T> , List<T> {
   ///////////////////////// operators /////////////////////////
 
   Vector<num> operator *(num scalar) {
-    return Vector<num>(_base.map((e) => e * scalar).toList());
+    return Vector<num>(flat.map((e) => e * scalar).toList());
   }
 
   Vector<num> operator /(num scalar) {
-    return Vector<num>(_base.map((e) => e / scalar).toList());
+    return Vector<num>(flat.map((e) => e / scalar).toList());
   }
 
 
@@ -63,17 +63,17 @@ class Vector<T extends num> implements Tensor<T> , List<T> {
     return v * (v.dot(this) / v.dot(v));
   }
 
-  T get sum => _base.fold(0 as T, (a, b) => (a + b) as T);
+  T get sum => flat.fold(0 as T, (a, b) => (a + b) as T);
 
-  T get product => _base.fold(1 as T, (a, b) => (a * b) as T);
+  T get product => this.fold(1 as T, (a, b) => (a * b) as T);
 
   num get mean => sum / length;
 
-  num get median => { // todo test
+  num get median => {
     if (length % 2 == 0) {
-      (_base[length ~/ 2] + _base[(length ~/ 2) + 1]) / 2
+      (flat[length ~/ 2] + flat[(length ~/ 2) + 1]) / 2
     } else {
-      _base[length ~/ 2]
+      flat[length ~/ 2]
     }
   } as num;
 
@@ -106,135 +106,135 @@ class Vector<T extends num> implements Tensor<T> , List<T> {
   ///////////////////////// List overrides /////////////////////////
 
   @override
-  bool any(bool Function(T) test) => _base.any(test);
+  bool any(bool Function(T) test) => flat.any(test);
 
   @override
-  List<T> cast<T>() => _base.cast<T>();
+  List<T> cast<T>() => flat.cast<T>();
 
   @override
-  bool contains(Object? element) => _base.contains(element);
+  bool contains(Object? element) => flat.contains(element);
 
   @override
-  T elementAt(int index) => _base.elementAt(index);
+  T elementAt(int index) => flat.elementAt(index);
 
   @override
-  bool every(bool Function(T) test) => _base.every(test);
+  bool every(bool Function(T) test) => flat.every(test);
 
   @override
-  Iterable<K> expand<K>(Iterable<K> Function(T) f) => _base.expand(f);
+  Iterable<K> expand<K>(Iterable<K> Function(T) f) => flat.expand(f);
 
   @override
-  T get first => _base.first;
+  T get first => flat.first;
 
   @override
   T firstWhere(bool Function(T) test, {T Function()? orElse}) =>
-      _base.firstWhere(test, orElse: orElse);
+      flat.firstWhere(test, orElse: orElse);
 
   @override
   E fold<E>(E initialValue, E Function(E previousValue, T element) combine) =>
-      _base.fold(initialValue, combine);
+      flat.fold(initialValue, combine);
 
   @override
-  Iterable<T> followedBy(Iterable<T> other) => _base.followedBy(other);
+  Iterable<T> followedBy(Iterable<T> other) => flat.followedBy(other);
 
   @override
-  void forEach(void Function(T) f) => _base.forEach(f);
+  void forEach(void Function(T) f) => flat.forEach(f);
 
   @override
-  bool get isEmpty => _base.isEmpty;
+  bool get isEmpty => flat.isEmpty;
 
   @override
-  bool get isNotEmpty => _base.isNotEmpty;
+  bool get isNotEmpty => flat.isNotEmpty;
 
   @override
-  Iterator<T> get iterator => _base.iterator;
+  Iterator<T> get iterator => flat.iterator;
 
   @override
-  String join([String separator = '']) => _base.join(separator);
+  String join([String separator = '']) => flat.join(separator);
 
   @override
-  T get last => _base.last;
+  T get last => flat.last;
 
   @override
   T lastWhere(bool Function(T) test, {T Function()? orElse}) =>
-      _base.lastWhere(test, orElse: orElse);
+      flat.lastWhere(test, orElse: orElse);
 
   @override
-  int get length => _base.length;
+  int get length => flat.length;
 
   @override
-  Iterable<E> map<E>(E Function(T) f) => _base.map(f);
+  Iterable<E> map<E>(E Function(T) f) => flat.map(f);
 
   @override
-  T reduce(T Function(T value, T element) combine) => _base.reduce(combine);
+  T reduce(T Function(T value, T element) combine) => flat.reduce(combine);
 
   @override
-  T get single => _base.single;
+  T get single => flat.single;
 
   @override
   T singleWhere(bool Function(T) test, {T Function()? orElse}) {
-    return _base.singleWhere(test, orElse: orElse);
+    return flat.singleWhere(test, orElse: orElse);
   }
 
   @override
-  Iterable<T> skip(int n) => _base.skip(n);
+  Iterable<T> skip(int n) => flat.skip(n);
 
   @override
-  Iterable<T> skipWhile(bool Function(T) test) => _base.skipWhile(test);
+  Iterable<T> skipWhile(bool Function(T) test) => flat.skipWhile(test);
 
   @override
-  Iterable<T> take(int n) => _base.take(n);
+  Iterable<T> take(int n) => flat.take(n);
 
   @override
-  Iterable<T> takeWhile(bool Function(T) test) => _base.takeWhile(test);
+  Iterable<T> takeWhile(bool Function(T) test) => flat.takeWhile(test);
 
   @override
-  List<T> toList({bool growable = true}) => _base.toList(growable: growable);
+  List<T> toList({bool growable = true}) => flat.toList(growable: growable);
 
   @override
-  Set<T> toSet() => _base.toSet();
+  Set<T> toSet() => flat.toSet();
 
   @override
-  Iterable<T> where(bool Function(T) test) => _base.where(test);
+  Iterable<T> where(bool Function(T) test) => flat.where(test);
 
   @override
-  Iterable<T> whereType<T>() => _base.whereType<T>();
+  Iterable<T> whereType<T>() => flat.whereType<T>();
 
   @override
-  String toString() => _base.toString();
+  String toString() => flat.toString();
 
   @override
-  T operator [](int index) => _base[index];
+  T operator [](int index) => flat[index];
 
   @override
   void operator []=(int index, T value) {
-    _base[index] = value;
+    flat[index] = value;
   }
 
   @override
-  List<T> operator +(List<T> other) => _base + other;
+  List<T> operator +(List<T> other) => flat + other;
 
   @override
   void add(T value) {
-    _base.add(value);
+    flat.add(value);
   }
 
   @override
   void addAll(Iterable<T> iterable) {
-    _base.addAll(iterable);
+    flat.addAll(iterable);
   }
 
   @override
-  Map<int, T> asMap() => _base.asMap();
+  Map<int, T> asMap() => flat.asMap();
 
   @override
   void clear() {
-    _base.clear();
+    flat.clear();
   }
 
   @override
   void fillRange(int start, int end, [T? fillValue]) {
-    _base.fillRange(start, end, fillValue);
+    flat.fillRange(start, end, fillValue);
   }
 
   @override
@@ -244,23 +244,23 @@ class Vector<T extends num> implements Tensor<T> , List<T> {
   }
 
   @override
-  Iterable<T> getRange(int start, int end) => _base.getRange(start, end);
+  Iterable<T> getRange(int start, int end) => flat.getRange(start, end);
 
   @override
-  int indexOf(T element, [int start = 0]) => _base.indexOf(element, start);
+  int indexOf(T element, [int start = 0]) => flat.indexOf(element, start);
 
   @override
   int indexWhere(bool Function(T) test, [int start = 0]) =>
-      _base.indexWhere(test, start);
+      flat.indexWhere(test, start);
 
   @override
   void insert(int index, T element) {
-    _base.insert(index, element);
+    flat.insert(index, element);
   }
 
   @override
   void insertAll(int index, Iterable<T> iterable) {
-    _base.insertAll(index, iterable);
+    flat.insertAll(index, iterable);
   }
 
   @override
@@ -270,85 +270,154 @@ class Vector<T extends num> implements Tensor<T> , List<T> {
   }
 
   @override
-  int lastIndexOf(T element, [int? start]) => _base.lastIndexOf(element, start);
+  int lastIndexOf(T element, [int? start]) => flat.lastIndexOf(element, start);
 
   @override
   int lastIndexWhere(bool Function(T) test, [int? start]) =>
-      _base.lastIndexWhere(test, start);
+      flat.lastIndexWhere(test, start);
 
   @override
   set length(int newLength) {
-    _base.length = newLength;
+    flat.length = newLength;
   }
 
   @override
-  bool remove(Object? value) => _base.remove(value);
+  bool remove(Object? value) => flat.remove(value);
 
   @override
-  T removeAt(int index) => _base.removeAt(index);
+  T removeAt(int index) => flat.removeAt(index);
 
   @override
-  T removeLast() => _base.removeLast();
+  T removeLast() => flat.removeLast();
 
   @override
   void removeRange(int start, int end) {
-    _base.removeRange(start, end);
+    flat.removeRange(start, end);
   }
 
   @override
   void removeWhere(bool Function(T) test) {
-    _base.removeWhere(test);
+    flat.removeWhere(test);
   }
 
   @override
   void replaceRange(int start, int end, Iterable<T> iterable) {
-    _base.replaceRange(start, end, iterable);
+    flat.replaceRange(start, end, iterable);
   }
 
   @override
   void retainWhere(bool Function(T) test) {
-    _base.retainWhere(test);
+    flat.retainWhere(test);
   }
 
   @override
-  Iterable<T> get reversed => _base.reversed;
+  Iterable<T> get reversed => flat.reversed;
 
   @override
   void setAll(int index, Iterable<T> iterable) {
-    _base.setAll(index, iterable);
+    flat.setAll(index, iterable);
   }
 
   @override
   void setRange(int start, int end, Iterable<T> iterable, [int skipCount = 0]) {
-    _base.setRange(start, end, iterable, skipCount);
+    flat.setRange(start, end, iterable, skipCount);
   }
 
   @override
   void shuffle([Random? random]) {
-    _base.shuffle(random);
+    flat.shuffle(random);
   }
 
   @override
   void sort([int Function(T, T)? compare]) {
-    _base.sort(compare);
+    flat.sort(compare);
   }
 
   @override
-  List<T> sublist(int start, [int? end]) => _base.sublist(start, end);
+  List<T> sublist(int start, [int? end]) => flat.sublist(start, end);
 
   @override
-  List<int> get shape => [_base.length];
+  List<int> get shape => [flat.length];
 
 }
 
 
-// class SparceVector<T extends num> extends Vector<T> {
-//
-//   List<int> _indices = [];
-//
-//   SparceVector.zeroes(int length) : super(List.generate(length, (i) => 0 as T));
-//
-//
-//   SparceVector(List<T> base) : super([base.length]);
-//
-// }
+class SparceVector<T extends num> extends Vector<T> {
+
+  // this is not sorted rn
+  List<int> _indices = [];
+
+  int length;
+
+  SparceVector.zeroes(this.length) : super([]);
+
+  get flat {
+    List<T> values = List<T>.filled(length, 0 as T);
+    for (int i = 0; i < _indices.length; i++) {
+      values[_indices[i]] = _base[i];
+    }
+    return values;
+  }
+
+
+  SparceVector(List<T> base) : this.length = base.length, super.empty() {
+    for (int i = 0; i < base.length; i++) {
+      if (base[i] != 0) {
+        _base.add(base[i]);
+        _indices.add(i);
+      }
+    }
+  }
+
+  SparceVector.sparce(List<T> values, this._indices, this.length) : super(values);
+
+  operator [](int index) {
+    if (_indices.contains(index)) {
+      return _base[_indices.indexOf(index)];
+    }
+    return 0 as T;
+  }
+
+  // not sorted, but doesnt matter
+  operator []=(int index, T value) {
+    if (value == 0) {
+      if (_indices.contains(index)) {
+        _base.removeAt(_indices.indexOf(index));
+        _indices.remove(index);
+      }
+      return;
+    }
+    if (_indices.contains(index)) {
+      _base[_indices.indexOf(index)] = value;
+    } else {
+      _base.add(value);
+      _indices.add(index);
+    }
+  }
+
+  Iterator<T> get iterator => new SparceVectorIterator(this);
+
+}
+
+
+class SparceVectorIterator<T extends num> implements Iterator<T> {
+
+  int _currentIndex = -1;
+
+  SparceVector<T> _vector;
+
+  SparceVectorIterator(this._vector);
+
+  @override
+  bool moveNext() {
+    if (_currentIndex < _vector.length - 1) {
+      _currentIndex++;
+      return true;
+    }
+    return false;
+  }
+
+
+  @override
+  get current => _vector[_currentIndex];
+}

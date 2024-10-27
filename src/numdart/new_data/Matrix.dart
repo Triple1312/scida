@@ -70,14 +70,14 @@ class Matrix<T extends num> extends Iterable<Vector<T>> implements Tensor<T> {
     if (index >= shape[0]) {
       throw Exception('Index out of bounds');
     }
-    return Vector(data.values[index]);
+    return data.row(index);
   }
 
   Vector<T> column(int index) {
     if (index >= shape[1]) {
       throw Exception('Index out of bounds');
     }
-    return Vector(data.values.map((e) => e[index]).toList());
+    return data.column(index);
   }
 
   @override
@@ -364,6 +364,14 @@ class MatrixData<T extends num> {
     _values[row][col] = value;
   }
 
+  Vector<T> row(int index) {
+    return Vector<T>(_values[index]);
+  }
+
+  Vector<T> column(int index) {
+    return Vector<T>(_values.map((e) => e[index]).toList());
+  }
+
   MatrixData.empty();
   
   factory MatrixData.csr(List<List<T>> values) => CSRMatrixData(values);
@@ -399,30 +407,74 @@ class FlatMatrixData<T extends num> extends MatrixData<T> {
 
 class CSRMatrixData<T extends num> extends MatrixData<T> {
 
-  List<T> _csr_values = [];
+  List<T> data = [];
   List<int> indices = [];
   List<int> indptr = [];
 
   CSRMatrixData(List<List<T>> values) : super.empty() {
+    rowLenght = values.length;
+    colLenght = values[0].length;
     for (int i = 0; i < values.length; i++) {
-
+      for (int j = 0; j < values[i].length; j++) {
+        if (values[i][j] != 0) {
+          set(i, j, values[i][j]);
+        }
+      }
     }
   }
 
-  List<List<T>> get values { // todo doesnt work
+  List<List<T>> get values { // todo check if works
     List<List<T>> result = [];
-    for (int i = 0; i < indptr.length - 1; i++) {
-      List<T> row = [];
-      for (int j = indptr[i]; j < indptr[i + 1]; j++) {
-        // row.add(_values[j]);
+    for (int i = 0; i < rowLenght; i++) {
+      List<T> row = List<T>.filled(colLenght, 0 as T);
+      List<int> row_indices = indices.sublist(indptr[i], indptr[i + 1]);
+      for (int j = 0; j < row_indices.length; j++) {
+        row[row_indices[j]] = data[indptr[i] + j];
       }
       result.add(row);
     }
     return result;
   }
-  
-  
-  
+
+  T get(int row, int col) {
+    List<int> row_indices = indices.sublist(indptr[row], indptr[row + 1]);
+    if (row_indices.contains(col)) {
+      return data[indptr[row] + row_indices.indexOf(col)];
+    }
+    else {
+      return 0 as T;
+    }
+  }
+
+  void set(int row, int col, T value) {
+    List<int> row_indices = indices.sublist(indptr[row], indptr[row + 1]);
+    if (value == 0) {
+      if (row_indices.contains(col)) {
+        int index = indptr[row] + row_indices.indexOf(col);
+        data.removeAt(index);
+        indices.removeAt(index);
+        indptr = indptr.map((e) => e > index ? e - 1 : e).toList();
+      }
+    }
+    else {
+      if (row_indices.contains(col)) {
+        data[indptr[row] + row_indices.indexOf(col)] = value;
+      }
+      else {
+        int index = row_indices.indexWhere((e) => e > col);
+        indices.insert(indptr[row] + index, col);
+        indptr = indptr.map((e) => e >= index ? e + 1 : e).toList();
+      }
+    }
+  }
+
+  SparceVector<T> row(int index) {
+    List<int> row_indices = indices.sublist(indptr[index], indptr[index + 1]);
+    List<T> row_values = data.sublist(indptr[index], indptr[index + 1]);
+    return SparceVector.sparce(row_values, row_indices, colLenght);
+  }
+
+
 }
 
 // class CSCMatrixData<T extends num> extends MatrixData<T> {
@@ -454,8 +506,6 @@ class CSRMatrixData<T extends num> extends MatrixData<T> {
 //   UTMMatrixData(this.values, this.row, this.col);
 //
 // }
-
-
 
 /// might implement other matrices in the future
 
@@ -500,6 +550,10 @@ class MatrixVectorColIterator<T extends num> implements Iterator<Vector<T>> {
   }
 }
 
+class MatrixSparceVectorRowIterator<T extends num> extends MatrixVectorRowIterator {
+  MatrixSparceVectorRowIterator(super.matrix);
+
+}
 
 
 
