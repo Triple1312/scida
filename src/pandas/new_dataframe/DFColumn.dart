@@ -32,6 +32,21 @@ class DFColumn<T> implements List<T?> {
   bool anyNotNull() {
     return any((e) => e != null);
   }
+
+  bool operator==(Object other) {
+    if (other is DFColumn) {
+      return _base == other._base;
+    }
+    else if(other is List) {
+      for (int i = 0; i < length; i++) {
+        if (this[i] != other[i]) {
+          return false;
+        }
+      }
+      return true;
+    }
+    return false;
+  }
   
   
   void fillna(T value) {
@@ -59,6 +74,14 @@ class DFColumn<T> implements List<T?> {
       res[i] = _base[i];
     }
     return res;
+  }
+
+  int count() {
+    int count = 0;
+    for (var element in _base) {
+      if (element != null) count++;
+    }
+    return count;
   }
   
   List<String> asString() => _base.map((e) => e.toString()).toList();

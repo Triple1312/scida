@@ -442,14 +442,6 @@ class CSRMatrixData<T extends num> extends MatrixData<T> {
     for (var row in values) {
       addRow(row);
     }
-
-    // for (int i = 0; i < values.length; i++) {
-    //   for (int j = 0; j < values[i].length; j++) {
-    //     if (values[i][j] != 0) {
-    //       set(i, j, values[i][j]);
-    //     }
-    //   }
-    // }
   }
 
   List<List<T>> get values { // todo check if works
