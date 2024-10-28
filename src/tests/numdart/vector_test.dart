@@ -53,6 +53,9 @@ void main() {
   });
   group("Sparce vector tests", () {
     SparceVector v = SparceVector([1, 0, 0, 0, 5, 0, 8]);
+    test("length", () {
+      expect(v.length, 7);
+    });
     test("sum", () {
       expect(v.sum, 14);
     });

@@ -2,6 +2,8 @@
 import 'package:meta/meta.dart';
 import 'dart:collection';
 
+import '../../numdart/new_data/Matrix.dart';
+
 
 abstract class Vectorizer {
 
@@ -17,11 +19,11 @@ abstract class Vectorizer {
 
   String? translate(int index) => vocab[index];
 
-  List<List<num>> fit_transform(List<String> documents, {bool sorted = false});
+  Matrix<num> fit_transform(List<String> documents, {bool sorted = false});
 
   void fit(List<String> documents, {bool sorted = false});
 
-  List<List<num>> transform(List<String> documents);
+  Matrix<num> transform(List<String> documents);
 
   // void fit_df(DataFrame data, String columnName) => fit(data.getColumn(columnName)!.asString());
 

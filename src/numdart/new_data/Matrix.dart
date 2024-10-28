@@ -66,6 +66,16 @@ class Matrix<T extends num> extends Iterable<Vector<T>> implements Tensor<T> {
     data.values[index] = value;
   }
 
+  bool operator ==(Object other) {
+    if (other == Matrix) {
+      return (other as Matrix).rows() == rows();
+    }
+    else if (other is List<List<T>>) {
+      return other == rows();
+    }
+    return false;
+  }
+
   Vector<T> row(int index) {
     if (index >= shape[0]) {
       throw Exception('Index out of bounds');
@@ -109,6 +119,13 @@ class Matrix<T extends num> extends Iterable<Vector<T>> implements Tensor<T> {
       }
     }
     return cols.map((e) => Vector(e)).toList();
+  }
+
+  void addRow(Vector<T> row) {
+    if (data.rowLenght != 0 && data.colLenght != row.length) {
+      throw Exception('Invalid number of values');
+    }
+    data.addRow(row);
   }
 
   ///////////////////////// operators /////////////////////////
@@ -376,8 +393,16 @@ class MatrixData<T extends num> {
   
   factory MatrixData.csr(List<List<T>> values) => CSRMatrixData(values);
 
-
-
+  void addRow(List<T> row) {
+    if ( this.rowLenght != 0 && row.length != colLenght) {
+      throw Exception('Invalid number of values');
+    }
+    _values.add(row);
+    rowLenght++;
+    if (colLenght == 0) {
+      colLenght = row.length;
+    }
+  }
 
 }
 
@@ -413,23 +438,28 @@ class CSRMatrixData<T extends num> extends MatrixData<T> {
 
   CSRMatrixData(List<List<T>> values) : super.empty() {
     rowLenght = values.length;
-    colLenght = values[0].length;
-    for (int i = 0; i < values.length; i++) {
-      for (int j = 0; j < values[i].length; j++) {
-        if (values[i][j] != 0) {
-          set(i, j, values[i][j]);
-        }
-      }
+    rowLenght == 0 ? colLenght = 0 : colLenght = values[0].length;
+    for (var row in values) {
+      addRow(row);
     }
+
+    // for (int i = 0; i < values.length; i++) {
+    //   for (int j = 0; j < values[i].length; j++) {
+    //     if (values[i][j] != 0) {
+    //       set(i, j, values[i][j]);
+    //     }
+    //   }
+    // }
   }
 
   List<List<T>> get values { // todo check if works
     List<List<T>> result = [];
+    List<int> tmp_indptrs = [0] + indptr;
     for (int i = 0; i < rowLenght; i++) {
-      List<T> row = List<T>.filled(colLenght, 0 as T);
-      List<int> row_indices = indices.sublist(indptr[i], indptr[i + 1]);
+      List<T> row = List<T>.filled(colLenght, 0.0 as T);
+      List<int> row_indices = indices.sublist(tmp_indptrs[i], tmp_indptrs[i + 1]);
       for (int j = 0; j < row_indices.length; j++) {
-        row[row_indices[j]] = data[indptr[i] + j];
+        row[row_indices[j]] = data[tmp_indptrs[i] + j];
       }
       result.add(row);
     }
@@ -469,9 +499,27 @@ class CSRMatrixData<T extends num> extends MatrixData<T> {
   }
 
   SparceVector<T> row(int index) {
-    List<int> row_indices = indices.sublist(indptr[index], indptr[index + 1]);
-    List<T> row_values = data.sublist(indptr[index], indptr[index + 1]);
+    List<int> tmp_indptrs = [0] + indptr;
+    List<int> row_indices = indices.sublist(tmp_indptrs[index], tmp_indptrs[index + 1]);
+    List<T> row_values = data.sublist(tmp_indptrs[index], tmp_indptrs[index + 1]);
     return SparceVector.sparce(row_values, row_indices, colLenght);
+  }
+
+  void addRow(List<T> row) {
+    if ( rowLenght != 0 && row.length != colLenght) {
+      throw Exception('Invalid number of values');
+    }
+    for (int i = 0; i < row.length; i++) {
+      if (row[i] != 0) {
+        data.add(row[i]);
+        indices.add(i);
+      }
+    }
+    indptr.add(data.length);
+    rowLenght++;
+    if (colLenght == 0) {
+      colLenght = row.length;
+    }
   }
 
 

@@ -48,6 +48,16 @@ class Vector<T extends num> implements Tensor<T> , List<T> {
     return Vector<num>(flat.map((e) => e / scalar).toList());
   }
 
+  bool operator ==(Object other) {
+    if (other is Vector) {
+      return flat == other.flat;
+    }
+    else if(other is List) {
+      return other == flat;
+    }
+    return false;
+  }
+
 
   ///////////////////////// Math /////////////////////////
 
@@ -351,8 +361,10 @@ class SparceVector<T extends num> extends Vector<T> {
 
   SparceVector.zeroes(this.length) : super([]);
 
+  SparceVector.empty() : this.length = 0, super.empty();
+
   get flat {
-    List<T> values = List<T>.filled(length, 0 as T);
+    List<T> values = List<T>.filled(length, 0.0 as T);
     for (int i = 0; i < _indices.length; i++) {
       values[_indices[i]] = _base[i];
     }
@@ -375,7 +387,7 @@ class SparceVector<T extends num> extends Vector<T> {
     if (_indices.contains(index)) {
       return _base[_indices.indexOf(index)];
     }
-    return 0 as T;
+    return 0.0 as T;
   }
 
   // not sorted, but doesnt matter
@@ -393,6 +405,16 @@ class SparceVector<T extends num> extends Vector<T> {
       _base.add(value);
       _indices.add(index);
     }
+  }
+
+  void add(T value) {
+    if (value == 0) {
+      length++;
+      return;
+    }
+    _base.add(value);
+    _indices.add(length);
+    length++;
   }
 
   Iterator<T> get iterator => new SparceVectorIterator(this);

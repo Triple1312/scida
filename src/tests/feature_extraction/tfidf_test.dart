@@ -3,6 +3,7 @@
 
 import 'package:test/expect.dart';
 import 'package:test/scaffolding.dart';
+import '../../numdart/new_data/Matrix.dart';
 import '../../scikit/feature_extraction/TfidfVectorizer.dart';
 
 void main() {
@@ -18,7 +19,7 @@ void main() {
      ]);
     });
     test("transform", () {
-      var y = tfidf.transform(["the quick dog"]);
+      Matrix<num> y = tfidf.transform(["the quick dog"]);
       expect(y, [[0.0, 0.0, 0.6198053799406072, 0, 0, 0, 0, 0.6198053799406072, 0.48133416873660545 ]]);
     });
   });

@@ -13,7 +13,7 @@ class TfIdfVectorizer extends Vectorizer {
   int docCount = 0;
   bool _stopwords;
 
-  List<List<num>> fitMatrix = [];
+  Matrix fitMatrix = Matrix.csr();
   HashMap<String, double> idfValues = new HashMap<String, double>();
 
   // tested tftype: n, t // idftype: t // normtype: n, c // stopwords: language
@@ -59,7 +59,7 @@ class TfIdfVectorizer extends Vectorizer {
 
 
   @override
-  List<List<num>> transform(List<String> documents) {
+  Matrix<num> transform(List<String> documents) {
     List<List<int>> termDocs = [];
     for (var i = 0; i < documents.length; i++) {
       List<int> tmp_count = [];
@@ -73,7 +73,8 @@ class TfIdfVectorizer extends Vectorizer {
       termDocs.add(tmp_count);
     }
 
-    List<List<num>> tmp_matrix =  documents.map((doc) {
+    Matrix tmp_m = Matrix.csr();
+    for (var doc in documents) {
       // Split the document into terms and optionally filter out stop words.
       List<String> rawTerms = doc.split(" ");
       List<String> terms = _stopwords ? rawTerms.where((term) => !ENGLISH_STOP_WORDS.contains(term)).toList() : rawTerms;
@@ -95,15 +96,20 @@ class TfIdfVectorizer extends Vectorizer {
 
       // Normalize the TF-IDF vector and convert it into a list using the vocabulary.
       double norm = sqrt(tfidfVector.values.map((x) => x * x).reduce((a, b) => a + b));
-      return vocab.map((word) => (tfidfVector[word] ?? 0.0) / norm).toList();
-    }).toList();
+      SparceVector<double> tmp_vec = SparceVector.empty();
+      for (var word in vocab) {
+        tmp_vec.add((tfidfVector[word] ?? 0.0) / norm);
+      }
+      // vocab.forEach((word) => tmp_vec.add(tfidfVector[word] ?? 0.0) / norm));
+      tmp_m.addRow(tmp_vec);
+    }
 
-    return tmp_matrix;
+    return tmp_m;
 
   }
 
   @override
-  List<List<num>> fit_transform(List<String> documents, {bool sorted = false}) {
+  Matrix<num> fit_transform(List<String> documents, {bool sorted = false}) {
     docCount = documents.length;
     var termDocs = HashMap<String, Set<int>>();
     // HashMap<String, double> idfScores = HashMap<String, double>();
@@ -138,7 +144,8 @@ class TfIdfVectorizer extends Vectorizer {
       vocab.sort();
     }
 
-    List<List<num>> tmp_matrix =  documents.map((doc) {
+    Matrix tmp_m = Matrix.csr();
+    for (var doc in documents) {
       // Split the document into terms and optionally filter out stop words.
       List<String> rawTerms = doc.split(" ");
       List<String> terms = _stopwords ? rawTerms.where((term) => !ENGLISH_STOP_WORDS.contains(term)).toList() : rawTerms;
@@ -160,29 +167,15 @@ class TfIdfVectorizer extends Vectorizer {
 
       // Normalize the TF-IDF vector and convert it into a list using the vocabulary.
       double norm = sqrt(tfidfVector.values.map((x) => x * x).reduce((a, b) => a + b));
-      return vocab.map((word) => (tfidfVector[word] ?? 0.0) / norm).toList();
-    }).toList();
-
-    fitMatrix = tmp_matrix;
-
-    return tmp_matrix;
-
-
-    // what code was faster? todo test
-
-    // var eek =  documents.map((doc) {
-    //   List<String> terms = doc.split(" ");
-    //   if (_stopwords) {
-    //     terms = terms.where((term) => !ENGLISH_STOP_WORDS.contains(term)).toList();
-    //   }
-    //   var maxTF = terms.map((term) => terms.where((t) => t == term).length).reduce(max);
-    //   var tfidfVector = {
-    //     for (var term in terms) term: _calculateTF(terms.where((t) => t == term).length.toDouble(), terms.length.toDouble(), maxTF) * idfScores[term]!
-    //   };
-    //   return _normalizeVector(tfidfVector);
-    // });
-    //
-    // return eek.map((doc) => vocab.map((word) => doc[word] ?? 0.0).toList()).toList();
+      SparceVector<double> tmp_vec = SparceVector.empty();
+      for (var word in vocab) {
+        tmp_vec.add((tfidfVector[word] ?? 0.0) / norm);
+      }
+      // vocab.forEach((word) => tmp_vec.add(tfidfVector[word] ?? 0.0) / norm));
+      tmp_m.addRow(tmp_vec);
+    }
+    fitMatrix = tmp_m;
+    return tmp_m;
   }
 
   List<(int, num)> query(String query, [int k = 10]) {
