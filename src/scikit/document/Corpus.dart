@@ -1,54 +1,40 @@
 
 import 'dart:convert';
+import 'dart:io';
 
+import '../preprocessing/TextModifier.dart';
 import 'Document.dart';
 
 
-abstract class Corpus {
 
-    addDoc(Document doc);
+// todo make it implement list
 
-    removeDoc(Document doc);
-
-    removeDocAt(int index);
-
-    Document getDocAt(int index);
-
-    Document? getDoc(String name);
-
-    Corpus();
-
-    factory Corpus.docs(List<Document> docs) => DefaultCorpus.docs(docs);
-
-    factory Corpus.empty() => DefaultCorpus.empty();
-
-    factory Corpus.lazy() => LazyCorpus.new();
-
-    factory Corpus.lazy_folder(String folderpath) => LazyCorpus.folder(folderpath);
-
-}
-
-
-
-class DefaultCorpus extends Corpus {
+class Corpus {
 
   List<Document> docs = new List<Document>.empty(growable: true);
 
-  addDoc(Document doc) {
-    docs.add(doc);
+  List<TextModifier> modifiers = []; // keeps all modifiers and will apply them when a new document is added
+
+  String folderpath = "";
+
+  Corpus(this.docs);
+
+  Corpus.folder(String folderpath) { // todo add a filter for filetypes
+    this.folderpath = folderpath;
+    List<String> files = Directory(folderpath).listSync().map((e) => e.path).toList();
+
+    for (int i = 0; i < files.length; i++) {
+      String file = files[i];
+      docs.add(Document.path(file));
+    }
+
   }
 
-  removeDoc(Document doc) {
-    docs.remove(doc);
-  }
+  int get length => docs.length;
 
-  removeDocAt(int index) {
-    docs.removeAt(index);
-  }
+  List<String> get filenames => docs.map((e) => e.filename).toList();
 
-  Document getDocAt(int index) {
-    return docs[index];
-  }
+  Document operator[](int index) => docs[index];
 
   Document? getDoc(String name) {
     for (Document doc in docs) {
@@ -59,51 +45,45 @@ class DefaultCorpus extends Corpus {
     return null;
   }
 
-  DefaultCorpus.docs(this.docs);
-
-  DefaultCorpus.empty();
-
-
-}
-
-
-
-class LazyCorpus extends Corpus{
-  @override
-  addDoc(Document doc) {
-    // TODO: implement addDoc
-    throw UnimplementedError();
+  removeDoc(String filename) {
+    for (int i = 0; i < docs.length; i++) {
+      if (docs[i].filename == filename) {
+        docs.removeAt(i);
+        return;
+      }
+    }
   }
 
-  @override
-  Document? getDoc(String name) {
-    // TODO: implement getDoc
-    throw UnimplementedError();
+  void addModifier(TextModifier modifier) {
+    modifiers.add(modifier);
+    docs.forEach((doc) {
+      doc.addModifier(modifier);
+    });
   }
 
-  @override
-  Document getDocAt(int index) {
-    // TODO: implement getDocAt
-    throw UnimplementedError();
+
+  Future<void> loadAllFiles([int batchcount = 5000]) async {
+    for (int i = 0; i < docs.length; i += batchcount) {
+      int batchend = i + batchcount;
+      if (batchend > docs.length) batchend = docs.length;
+      List<Document> batch = docs.sublist(i,batchend);
+      await Future.wait(batch.map((doc) => doc.loadAsync()));
+      print(batchend);
+    }
+
+    // for (int i = 0; i < docs.length; i++) {
+    //   Document doc = docs[i];
+    //   doc.load();
+    //   if (i % 1000 == 0) print(i);
+    // }
   }
 
-  @override
-  removeDoc(Document doc) {
-    // TODO: implement removeDoc
-    throw UnimplementedError();
+  void loadAllFilesAsync() async {
+    for (int i = 0; i < docs.length; i++) {
+      Document doc = docs[i];
+      await doc.loadAsync();
+      if (i % 1000 == 0) print(i);
+    }
   }
-
-  @override
-  removeDocAt(int index) {
-    // TODO: implement removeDocAt
-    throw UnimplementedError();
-  }
-
-  LazyCorpus();
-
-  LazyCorpus.folder(String folderpath) {
-
-  }
-
 
 }

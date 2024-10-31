@@ -1,77 +1,96 @@
 
 
-
 import 'dart:io';
 
-abstract class Document {
+import '../preprocessing/TextModifier.dart';
 
-  abstract String contents;
+// todo Add a stream method ?
 
-  abstract String filename;
+class Document {
 
-  factory Document(String name, String contents) =>
-      DefaultDocument(name, contents);
+  File? file;
 
-  factory Document.open(String filepath) =>
-      DefaultDocument.open(filepath);
+  String _contents = "";
 
+  String _filename = "";
 
-  factory Document.from_csv(String filepath, [String seperator = ',']) =>
-      DefaultDocument(filepath, seperator);
-}
+  List<TextModifier> modifiers = []; // only used if text is not loaded
 
-
-class DefaultDocument implements Document {
-
-  DefaultDocument(this.filename, this.contents);
-
-  @override
-  late String contents;
-
-  @override
-  late String filename;
-
-
-  DefaultDocument.open(String filepath) {
-    File file = new File(filepath);
-    file.open();
-    filename = file.path.split("/").last;
-    contents = file.readAsStringSync();
-
+  String get contents {
+    if (_contents != "") return _contents;
+    String tmp = file!.readAsStringSync();
+    for (TextModifier modifier in modifiers) {
+      tmp = modifier.transform(tmp);
+    }
+    return tmp;
   }
 
-  DefaultDocument.from_csv(String filepath, [String seperator = ',']) {
-    File file = new File(filepath);
-    file.open();
-    List<String> lines = file.readAsLinesSync();
+  String get filename {
+    if (_filename != "") return _filename;
+    _filename = file!.path.split("/").last;
+    return _filename;
   }
 
-}
+  Document(this._filename, this._contents) : file = null;
 
+  Document.file(File file) : file = file;
 
-class ClosedDocument implements Document {
+  Document.path(String path) : file = new File(path);
 
-  File file;
+  Document.load_file(String filepath) : file = new File(filepath) {
+    load();
+  }
 
-  @override
-  String get contents => file.readAsStringSync();
-
-  @override
-  String get filename => file.path.split("/").last;
-
-  ClosedDocument(String filepath) : file = new File(filepath);
-
-  @override
   set contents(String _contents) {
-    file.writeAsStringSync(_contents);
+    file!.writeAsStringSync(_contents);
   }
 
-  @override
   set filename(String _filename) {
-    file.rename(_filename);
+    file!.rename(_filename);
+  }
+
+  void load() {
+    _contents = file!.readAsStringSync();
+    for (TextModifier modifier in modifiers) {
+      _contents = modifier.transform(_contents);
+    }
+    modifiers.clear();
+  }
+
+  Future<void> loadAsync() async {
+    _contents = await file!.readAsString();
+    for (TextModifier modifier in modifiers) {
+      _contents = modifier.transform(_contents);
+    }
+    modifiers.clear();
+  }
+
+  void save() {
+    file!.writeAsStringSync(_contents);
+  }
+
+  void rename(String newname) {
+    file!.rename(newname);
+  }
+
+  void saveToFile(String filepath) {
+    File curr_file = new File(filepath);
+    curr_file.writeAsStringSync(_contents);
+  }
+
+  void addModifier(TextModifier modifier) {
+    if (_contents != "") {
+      _contents = modifier.transform(_contents);
+    }
+    else {
+      modifiers.add(modifier);
+    }
   }
 
 }
+
+
+
 
 // class CSVDocument extends Document {
 //

@@ -9,16 +9,78 @@ class DataFrame extends Iterable<DFColumn> {
 
   List<DFColumn> _base = [];
 
-  DataFrame.from_csv(String filepath, {bool hascolumnNames = true, seperator = ',', List<String> columnNames = const []}) {
+  DataFrame.from_csv(String filepath, {bool hascolumnNames = true, seperator = ',', List<String> columnNames = const [], List<Type> columnTypes = const []}) {
     List<String> lines = File(filepath).readAsLinesSync();
     List<List<String>> words = lines.map((e) => e.split(seperator)).toList();
-    if (columnNames.isEmpty) {
-      columnNames = words[0];
+    List<String> columnNamesnew = [];
+    columnNamesnew.addAll(columnNames);
+    if (columnNamesnew.isEmpty) {
+      columnNamesnew = [];
+      columnNamesnew = words[0];
+      words = words.sublist(1);
     }
+    List<Type> columnTypesnew = [];
+    columnTypesnew.addAll(columnTypes);
+    if (columnTypes.length < words[0].length) {
+      for (int i = columnTypesnew.length; i < words[0].length; i++) {
+        columnTypesnew.add(dynamic);
+      }
+    }
+    _base = DataFrame.build(words, columnNamesnew, columnTypesnew)._base; // todo this is so bad , pl fix
+  }
+
+  DataFrame(this._base);
+
+  DataFrame.build(List<List<String>> words, List<String> columnNames, List<Type> columnTypes) {
     for (int i = 0; i < columnNames.length; i++) {
-      _base.add(DFColumn<String>(columnNames[i], words.sublist(1).fold([], (prev, e) => prev..add(e[i] == ''? null: e[i]))));
+      Type curretnType = String; // default type
+      if (columnTypes.length > i) { // if columntype is defined for this element
+        curretnType = columnTypes[i]; // set given columntype
+      }
+      if (curretnType == String) {
+        _base.add(DFColumn<String>(columnNames[i], words.fold([], (prev, e) => prev..add(e[i] == ''? null: e[i]))));
+      }
+      else if (curretnType == int) {
+        _base.add(DFColumn<int>(columnNames[i], words.fold([], (prev, e) => prev..add(e[i] == ''? null: int.parse(e[i])))));
+      }
+      else if (curretnType == double) {
+        _base.add(DFColumn<double>(columnNames[i], words.fold([], (prev, e) => prev..add(e[i] == ''? null: double.parse(e[i])))));
+      }
+      else if (curretnType == bool) {
+        _base.add(DFColumn<bool>(columnNames[i], words.fold([], (prev, e) => prev..add(e[i] == ''? null: e[i] == 'true'))));
+      }
+      else if(curretnType == dynamic) {
+        DFColumn column = new DFColumn(columnNames[i], []);
+        for (var wordl in words) {
+          if (wordl[i] == '') {
+            column.add(null);
+            continue;
+          }
+          try {
+            column.add(int.parse(wordl[i]));
+          }
+          catch (e) {
+            try {
+              column.add(double.parse(wordl[i]));
+            }
+            catch (e) {
+              try {
+                column.add(wordl[i] == 'true' ? true : wordl[i] == 'false'
+                    ? false
+                    : throw Exception('Invalid boolean value'));
+              }
+              catch (e) {
+                column.add(wordl[i]);
+              }
+            }
+          }
+        }
+        _base.add(column);
+      }
     }
   }
+
+
 
   get shape => [_base.isEmpty? 0: _base[0].length, _base.length];
 

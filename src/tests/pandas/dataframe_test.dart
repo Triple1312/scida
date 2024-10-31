@@ -28,7 +28,7 @@ void main() {
     });
   });
   group("RandomIntegersMixed Column Tests:",() {
-    var df = DataFrame.from_csv("src/tests/pandas/RandomIntegersMixed.csv");
+    var df = DataFrame.from_csv("src/tests/pandas/RandomIntegersMixed.csv", columnTypes: [String, String, dynamic, String, int]);
     DFColumn col5 = df["Column_5"];
     DFColumn col2 = df["Column_2"];
     DFColumn col3 = df["Column_3"];
@@ -49,13 +49,13 @@ void main() {
       expect(col5.asString(), ["-100", "-35", "73", "-44", "-97", "36"]);
     });
     test("Mixed column any", () {
-      expect(col3.anyNotNull, true);
+      expect(col3.anyNotNull(), true);
     });
     test("Mixed column all", () {
       expect(col3.all(), false);
     });
     test("Mixed column empty any", () {
-      expect(col1.any((e) => e != null), false);
+      expect(col1.anyNotNull(), false);
     });
     test("Mixed column all", () {
       expect(col1.all(), false);
@@ -72,7 +72,7 @@ void main() {
     test("dynamic values", (){
       expect(col3, ["PEkyw", 22.283637255811087, null, "ZIaOY", 25, null]);
     });
-    DFColumn col3_e = col3.copy()..fillna("69");
+    DFColumn col3_e = col3.copy()..fillna(69);
     test("copy + fillna", () {
       expect(col3_e, ["PEkyw", 22.283637255811087, 69, "ZIaOY", 25, 69]);
     });

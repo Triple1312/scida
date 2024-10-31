@@ -3,6 +3,8 @@ import 'dart:collection';
 import 'dart:math';
 import '../../numdart/new_data/Matrix.dart';
 import '../../numdart/new_data/Vector.dart';
+import '../document/Corpus.dart';
+import '../document/Document.dart';
 import 'Vectorizer.dart';
 import '../utils/stopwords.dart';
 
@@ -119,6 +121,7 @@ class TfIdfVectorizer extends Vectorizer {
 
     for (var i = 0; i < documents.length; i++) {
       List<String> terms = documents[i].split(" ");
+      terms.removeWhere((term) => term == '' || term == ' ' || term == "." || term == "?" || term == "!" || term == "," || term == ":" || term == ";");
       if (_stopwords) {
         terms = terms.where((term) => !ENGLISH_STOP_WORDS.contains(term)).toList();
       }
@@ -173,6 +176,84 @@ class TfIdfVectorizer extends Vectorizer {
       }
       // vocab.forEach((word) => tmp_vec.add(tfidfVector[word] ?? 0.0) / norm));
       tmp_m.addRow(tmp_vec);
+    }
+    fitMatrix = tmp_m;
+    return tmp_m;
+  }
+
+
+  // Matrix<num> firt_tr(Corpus corpus, {bool sorted = false}) {
+  //
+  // }
+
+  Matrix<num> fit_transform_corpus(Corpus corpus, {bool sorted = false}) {
+    docCount = corpus.length;
+    var termDocs = HashMap<String, Set<int>>();
+    // HashMap<String, double> idfScores = HashMap<String, double>();
+
+
+    var uniqueTerms = Set<String>(); // needed ??
+
+    for (var i = 0; i < corpus.length; i++) {
+      List<String> terms = corpus[i].contents.split(" ");
+      if (_stopwords) {
+        terms = terms.where((term) => !ENGLISH_STOP_WORDS.contains(term)).toList();
+      }
+      uniqueTerms = Set<String>.from(terms);
+      uniqueTerms.forEach((term) {
+        (termDocs[term] ??= {}).add(i);
+      });
+    }
+    termDocs.forEach((term, docs) {
+      idfValues[term] = _calculateIDF(docs.length);
+    });
+
+    for (var i = 0; i < corpus.length; i++) {
+      List<String> terms = corpus[i].contents.split(" ");
+      if (_stopwords) {
+        terms = terms.where((term) => !ENGLISH_STOP_WORDS.contains(term)).toList();
+      }
+      uniqueTerms.addAll(terms);
+    }
+
+    vocab = uniqueTerms.toList(); // this is the order
+    if (sorted) {
+      vocab.sort();
+    }
+
+    Matrix tmp_m = Matrix.csr();
+    for (int i = 0; i <  corpus.length; i++) {
+      Document doc = corpus[i];
+      // Split the document into terms and optionally filter out stop words.
+      List<String> rawTerms = doc.contents.split(" ");
+      List<String> terms = _stopwords ? rawTerms.where((term) => !ENGLISH_STOP_WORDS.contains(term)).toList() : rawTerms;
+
+      // Calculate term frequencies in one pass.
+      Map<String, int> termFreqs = {};
+      for (var term in terms) {
+        termFreqs[term] = (termFreqs[term] ?? 0) + 1;
+      }
+
+      // Determine the maximum term frequency for normalization.
+      int maxTF = termFreqs.values.reduce(max);
+
+      // Create the TF-IDF vector for the document.
+      Map<String, double> tfidfVector = termFreqs.map((term, count) {
+        double tf = _calculateTF(count.toDouble(), terms.length.toDouble(), maxTF);
+        return MapEntry(term, tf * (idfValues[term] ?? 0.0));
+      });
+
+      // Normalize the TF-IDF vector and convert it into a list using the vocabulary.
+      double norm = sqrt(tfidfVector.values.map((x) => x * x).reduce((a, b) => a + b));
+      SparceVector<double> tmp_vec = SparceVector.empty();
+      for (var word in vocab) {
+        tmp_vec.add((tfidfVector[word] ?? 0.0) / norm);
+      }
+      // vocab.forEach((word) => tmp_vec.add(tfidfVector[word] ?? 0.0) / norm));
+      tmp_m.addRow(tmp_vec);
+      if  (i % 10000 == 0) {
+        print('Processed $i documents');
+      }
     }
     fitMatrix = tmp_m;
     return tmp_m;

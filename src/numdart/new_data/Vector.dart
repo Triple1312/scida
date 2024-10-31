@@ -38,6 +38,19 @@ class Vector<T extends num> implements Tensor<T> , List<T> {
     // TODO: implement set
   }
 
+  void extend(int size) {
+    while (size > length) {
+      _base.add(0 as T);
+    }
+  }
+
+  void addExtend(int index, T value) {
+    if (index >= length) {
+      extend(index + 1);
+    }
+    _base[index] = value;
+  }
+
   ///////////////////////// operators /////////////////////////
 
   Vector<num> operator *(num scalar) {
@@ -382,6 +395,12 @@ class SparceVector<T extends num> extends Vector<T> {
   }
 
   SparceVector.sparce(List<T> values, this._indices, this.length) : super(values);
+
+
+  @override
+  void extend(int size) {
+    this.length = size;
+  }
 
   operator [](int index) {
     if (_indices.contains(index)) {

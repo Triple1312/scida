@@ -1,7 +1,9 @@
 // based on Porter, M. "An algorithm for suffix stripping."
 // includes the Martin extentions
 
-class PorterStemmer {
+import '../TextModifier.dart';
+
+class PorterStemmer implements TextModifier{
 
   static String vowels = "aeiou";
 
@@ -54,7 +56,7 @@ class PorterStemmer {
     if (newWord.endsWith("at") || newWord.endsWith("bl") || newWord.endsWith("iz")) {
       return newWord + "e";
     }
-    if (newWord[newWord.length - 1] == newWord[newWord.length - 2] &&
+    if (newWord[newWord.length - 1] == newWord[newWord.length - 1] &&
         newWord[newWord.length - 1] != 'l' &&
         newWord[newWord.length - 1] != 's' &&
         newWord[newWord.length - 1] != 'z') {
@@ -193,5 +195,8 @@ class PorterStemmer {
     List<String> words = (RegExp(r'\b[a-zA-Z]+(?:-[a-zA-Z]+)*\b|[.,!?;:"()]')).allMatches(document).map((match) => match.group(0)!).toList();
     return words.map((word) => stem(word)).join(" ");
   }
+
+  @override
+  String transform(String text) => stem_document(text);
 
 }
