@@ -34,7 +34,7 @@ class InvertedIndexer {
   List<Document> query(String query) =>
     query_list(query.split(" "));
 
-  List<Document> query_list(List<String> query) { // todo check indices with start
+  List<Document> query_list(List<String> query) {
     List<int> doc_indeces = List<int>.generate(docs.length, (i) => i + fileIndexStart);
     for (String term in query) {
       List<int> new_indeces = [];
@@ -63,19 +63,6 @@ class InvertedIndexer {
       }
     }
     return -1;
-  }
-
-  String toJson() {
-    String json = "{\"invertedIndex\": {";
-    for (String term in invertedIndex.keys) {
-      json += "\"$term\": [";
-      for (int i in invertedIndex[term]!) {
-        json += "$i,";
-      }
-      json = json.substring(0, json.length - 1);
-      json += "],";
-    }
-    json = json.substring(0, json.length - 1);
   }
 
 }

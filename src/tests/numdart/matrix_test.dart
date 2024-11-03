@@ -1,5 +1,6 @@
 
 
+import 'package:test/expect.dart';
 import 'package:test/test.dart';
 import '../../numdart/new_data/Matrix.dart';
 import '../../numdart/new_data/Vector.dart';
@@ -103,6 +104,8 @@ void main() {
     test("shape", () {
       expect(matrix.shape, [2, 3]);
     });
+
+
   });
 
   group("test dot", () {
@@ -110,6 +113,82 @@ void main() {
     var matrix2 = Matrix.flat([1, 2, 3, 4, 5, 6], 3, 2);
     test("dot", () {
       expect(matrix.dot(matrix2).flat, [9, 12, 15, 19, 26, 33, 29, 40, 51]);
+    });
+  });
+
+  group("test csr", () {
+    Matrix<int> matrix2 = Matrix<int>.csr();
+    matrix2.setSize(5, 4);
+    test("sparce flat", () {
+      expect(matrix2.flat, [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]);
+    });
+    test("set 1", () {
+      matrix2.set([1, 1], 8);
+      expect(matrix2.flat, [0,0,0,0,0,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0]);
+    });
+    test("set 2", () {
+      matrix2.set([0, 3], 3);
+      matrix2.set([1, 0], 5);
+      expect(matrix2.flat, [0,0,0,3,5,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0]);
+    });
+    test("insert last row", () {
+      matrix2.set([4, 3], 6);
+      expect(matrix2.flat, [0,0,0,3,5,8,0,0,0,0,0,0,0,0,0,0,0,0,0,6]);
+    });
+    test("change number already set", () {
+      matrix2.set([4, 3], 7);
+      expect(matrix2.flat, [0,0,0,3,5,8,0,0,0,0,0,0,0,0,0,0,0,0,0,7]);
+    });
+    test("override number with 0", () {
+      matrix2.set([0, 3], 0);
+      expect(matrix2.flat, [0,0,0,0,5,8,0,0,0,0,0,0,0,0,0,0,0,0,0,7]);
+    });
+    test("get 1", () {
+      expect(matrix2.get([1,0]), 5);
+    });
+    test("get 2", () {
+      expect(matrix2.get([4,3]), 7);
+    });
+    test("get 3", () {
+      expect(matrix2.get([0,0]), 0);
+    });
+  });
+
+  group("test mapMatrix", () {
+    Matrix<int> matrix3 = Matrix<int>.map([], 5, 4);
+    matrix3.setSize(5, 4);
+    test("sparce flat", () {
+      expect(matrix3.flat, [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]);
+    });
+    test("set 1", () {
+      matrix3.set([1, 1], 8);
+      expect(matrix3.flat, [0,0,0,0,0,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0]);
+    });
+    test("set 2", () {
+      matrix3.set([0, 3], 3);
+      matrix3.set([1, 0], 5);
+      expect(matrix3.flat, [0,0,0,3,5,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0]);
+    });
+    test("insert last row", () {
+      matrix3.set([4, 3], 6);
+      expect(matrix3.flat, [0,0,0,3,5,8,0,0,0,0,0,0,0,0,0,0,0,0,0,6]);
+    });
+    test("change number already set", () {
+      matrix3.set([4, 3], 7);
+      expect(matrix3.flat, [0,0,0,3,5,8,0,0,0,0,0,0,0,0,0,0,0,0,0,7]);
+    });
+    test("override number with 0", () {
+      matrix3.set([0, 3], 0);
+      expect(matrix3.flat, [0,0,0,0,5,8,0,0,0,0,0,0,0,0,0,0,0,0,0,7]);
+    });
+    test("get 1", () {
+      expect(matrix3.get([1,0]), 5);
+    });
+    test("get 2", () {
+      expect(matrix3.get([4,3]), 7);
+    });
+    test("get 3", () {
+      expect(matrix3.get([0,0]), 0);
     });
   });
 }

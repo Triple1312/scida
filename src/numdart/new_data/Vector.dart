@@ -74,6 +74,10 @@ class Vector<T extends num> implements Tensor<T> , List<T> {
 
   ///////////////////////// Math /////////////////////////
 
+  Vector<num> normalize() {
+    return this / norm(2);
+  }
+
   num dot(Vector v) {
     if (shape[0] != v.shape[0]) {
       throw Exception("Vectors must be same size");
@@ -376,12 +380,48 @@ class SparceVector<T extends num> extends Vector<T> {
 
   SparceVector.empty() : this.length = 0, super.empty();
 
+  SparceVector.map(Map<int, T> map, int length) : this.length = length, super.empty() {
+    for (int i in map.keys) {
+      if (map[i] != 0) {
+        _base.add(map[i] as T);
+        _indices.add(i);
+      }
+    }
+  }
+
+  num dot(Vector<num> v) {
+    num sum = 0;
+    for (int i = 0; i < _indices.length; i++) {
+      sum += v[_indices[i]] * _base[i];
+    }
+    return sum;
+  }
+
+  @override
+  num norm(int p) {
+    num ret = 0;
+    for (int i = 0; i < _base.length; i++) {
+      ret += pow(_base[i].abs(), p);
+    }
+    return pow(ret, 1/p);
+  }
+
   get flat {
-    List<T> values = List<T>.filled(length, 0.0 as T);
+    List<T> values = List<T>.filled(length, 0 as T);
     for (int i = 0; i < _indices.length; i++) {
       values[_indices[i]] = _base[i];
     }
     return values;
+  }
+
+  @override
+  Vector<num> operator /(num scalar) {
+    SparceVector<num> v = SparceVector<num>.zeroes(length);
+    v._indices = _indices;
+    for (int i = 0; i < _base.length; i++) {
+      v._base.add(_base[i] / scalar);
+    }
+    return v;
   }
 
 
@@ -437,6 +477,11 @@ class SparceVector<T extends num> extends Vector<T> {
   }
 
   Iterator<T> get iterator => new SparceVectorIterator(this);
+
+  void addExtend(int index, T value) {
+    if (index > length) length = index;
+    this[index] = value;
+  }
 
 }
 

@@ -7,17 +7,16 @@ import '../../numdart/new_data/Matrix.dart';
 
 abstract class Vectorizer {
 
-  @protected
-  List<String> vocab = [];
+  Map<String, int> vocab = {};
 
 
 
   // @protected
   // void dataFrameConstructor(DataFrame data); // todo maybe could implement here // no idea what I should do with it
 
-  bool contains(String key) => vocab.contains(key);
+  bool contains(String key) => vocab[key] != null;
 
-  String? translate(int index) => vocab[index];
+  String? translate(int index) => vocab.keys.elementAt(index);
 
   Matrix<num> fit_transform(List<String> documents, {bool sorted = false});
 
@@ -35,8 +34,8 @@ abstract class Vectorizer {
 
   @protected
   bool add_to_vocab(String word) {
-    if (!vocab.contains(word)) {
-      vocab.add(word);
+    if (vocab[word] == null) {
+      vocab[word] = vocab.length;
       return true;
     }
     return false;

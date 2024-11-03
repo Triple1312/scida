@@ -99,5 +99,20 @@ void main() {
       expect(v[3], 3);
       expect(v.sum, 16);
     });
+
+    Vector v1 = SparceVector([1, 0, 3, 4, 5]);
+    Vector v2 = SparceVector([2, 5, 8, 0, 1]);
+    test("dot", () {
+      expect(v1.dot(v2), 31);
+    });
+    test("normalize", () {
+      expect(v1.normalize(), [
+        0.14002800840280097,
+        0,
+        0.42008402520840293,
+        0.5601120336112039,
+        0.7001400420140048
+      ]);
+    });
   });
 }

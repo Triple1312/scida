@@ -3,11 +3,19 @@
 
 import '../TextModifier.dart';
 
+import '../../utils/stopwords.dart';
+
 class PorterStemmer implements TextModifier{
 
   static String vowels = "aeiou";
 
   static String consonants = "bcdfghjklmnpqrstvwxyz";
+
+  bool _stopwords = false;
+
+  PorterStemmer({bool stopwords = false}) {
+    _stopwords = stopwords;
+  }
 
   bool _vowel(String v) => vowels.contains(v); // pl just only send a char
 
@@ -192,7 +200,10 @@ class PorterStemmer implements TextModifier{
   }
 
   String stem_document(String document) {
-    List<String> words = (RegExp(r'\b[a-zA-Z]+(?:-[a-zA-Z]+)*\b|[.,!?;:"()]')).allMatches(document).map((match) => match.group(0)!).toList();
+    List<String> words = (RegExp(r'\b[a-zA-Z]+(?:-[a-zA-Z]+)*\b|[.,!?;:"()&$]')).allMatches(document).map((match) => match.group(0)!).toList();
+    if (_stopwords) {
+      words = removeStopWords(words, 'english');
+    }
     return words.map((word) => stem(word)).join(" ");
   }
 

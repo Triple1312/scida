@@ -30,6 +30,10 @@ class Matrix<T extends num> extends Iterable<Vector<T>> implements Tensor<T> {
     // TODO: implement shape
   }
 
+  void setSize(int row, int col) { // todo shouldnt be a thing
+    data.setSize(row, col);
+  }
+
   ///////////////////////// Constructors /////////////////////////
 
   Matrix({List<List<T>> values = const []}) : data = MatrixData(values);
@@ -46,7 +50,9 @@ class Matrix<T extends num> extends Iterable<Vector<T>> implements Tensor<T> {
 
   factory Matrix.columnsInit(List<List<T>> values) => Matrix<T>(values: values).transpose; // todo probably make better ?
 
-  factory Matrix.csr({List<List<T>> values = const []}) => Matrix._data(CSRMatrixData(values));
+  factory Matrix.csr({List<List<T>> values = const [], List<int> size = const [0,0]}) => Matrix._data(CSRMatrixData(values));
+
+  factory Matrix.map(List<Map<int, T>> y, int rowlength, int colLength) => Matrix._data(MapMatrixData.c(y, rowlength, colLength));
 
   // factory Matrix.csc({List<List<T>> values = const []}) => Matrix._data(CSCMatrixData(values));
 
@@ -404,6 +410,21 @@ class MatrixData<T extends num> {
     }
   }
 
+  void addColumn(List<T> column) {
+    // if ( this.colLenght != 0 && column.length != rowLenght) { // todo check
+    //   throw Exception('Invalid number of values');
+    // }
+    for (int i = 0; i < rowLenght; i++) {
+      _values[i].add(column[i]);
+    }
+    colLenght++;
+  }
+
+  void setSize(int row, int col) {
+    rowLenght = row;
+    colLenght = col;
+  }
+
 }
 
 class FlatMatrixData<T extends num> extends MatrixData<T> {
@@ -446,9 +467,9 @@ class CSRMatrixData<T extends num> extends MatrixData<T> {
 
   List<List<T>> get values { // todo check if works
     List<List<T>> result = [];
-    List<int> tmp_indptrs = [0] + indptr;
+    List<int> tmp_indptrs = indptr;
     for (int i = 0; i < rowLenght; i++) {
-      List<T> row = List<T>.filled(colLenght, 0.0 as T);
+      List<T> row = List<T>.filled(colLenght, 0 as T);
       List<int> row_indices = indices.sublist(tmp_indptrs[i], tmp_indptrs[i + 1]);
       for (int j = 0; j < row_indices.length; j++) {
         row[row_indices[j]] = data[tmp_indptrs[i] + j];
@@ -459,7 +480,7 @@ class CSRMatrixData<T extends num> extends MatrixData<T> {
   }
 
   T get(int row, int col) {
-    List<int> row_indices = indices.sublist(indptr[row], indptr[row + 1]);
+    List<int> row_indices = indices.sublist(indptr[row], indptr[row + 1]); // todo can fasater
     if (row_indices.contains(col)) {
       return data[indptr[row] + row_indices.indexOf(col)];
     }
@@ -469,25 +490,145 @@ class CSRMatrixData<T extends num> extends MatrixData<T> {
   }
 
   void set(int row, int col, T value) {
-    List<int> row_indices = indices.sublist(indptr[row], indptr[row + 1]);
-    if (value == 0) {
-      if (row_indices.contains(col)) {
-        int index = indptr[row] + row_indices.indexOf(col);
-        data.removeAt(index);
-        indices.removeAt(index);
-        indptr = indptr.map((e) => e > index ? e - 1 : e).toList();
+    if (value == get(row, col)) return; // nothing would change
+
+    // only works if matrix big enough, throws range error if not
+    int rowStart = indptr[row];
+    int rowEnd = indptr[row + 1];
+    if (rowEnd == rowStart) {
+      data.insert(rowStart, value);
+      indices.insert(rowStart, col);
+      // update rowstart (indptr) of all following rows
+      for (int i = row +1; i < indptr.length; i++) {
+        indptr[i]++;
       }
+      return;
     }
     else {
-      if (row_indices.contains(col)) {
-        data[indptr[row] + row_indices.indexOf(col)] = value;
+      for (int j = rowStart; j < rowEnd; j++) {
+        if (indices[j] > col) {
+          data.insert(j, value);
+          indices.insert(j, col);
+          // update rowstart (indptr) of all following rows
+          for (int i = row +1; i < indptr.length; i++) {
+            indptr[i]++;
+          }
+          return;
+        }
+        else if (indices[j] == col) {
+          data[j] = value;
+          if (value ==0) {
+            data.removeAt(j);
+            indices.removeAt(j);
+            for (int i = row +1; i < indptr.length; i++) {
+              indptr[i]--;
+            }
+          }
+          return;
+        }
       }
-      else {
-        int index = row_indices.indexWhere((e) => e > col);
-        indices.insert(indptr[row] + index, col);
-        indptr = indptr.map((e) => e >= index ? e + 1 : e).toList();
+      data.insert(rowEnd, value);
+      indices.insert(rowEnd, col);
+      // update rowstart (indptr) of all following rows
+      for (int i = row +1; i < indptr.length; i++) {
+        indptr[i]++;
       }
+      return;
+
     }
+
+    // update rowstart (indptr) of all following rows
+    for (int i = col +1; i < indptr.length; i++) {
+      indptr[i]++;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // // first addition
+    // if (indices.isEmpty) {
+    //   if (value != 0) {
+    //     data.add(value);
+    //     indices.add(col);
+    //     indptr = indptr.map((e) => e > row ? e + 1 : e).toList();
+    //   }
+    //   return;
+    // }
+    // else {
+    //   List<int> row_indices = [];
+    //   if (row >= indptr.length) {
+    //     row_indices = indices.sublist(indptr[row]);
+    //   }
+    //   else {
+    //     row_indices = indices.sublist(indptr[row], indptr[row + 1]);
+    //   }
+    //   if (value == 0) {
+    //     if (row_indices.contains(col)) {
+    //       int index = indptr[row] + row_indices.indexOf(col);
+    //       data.removeAt(index);
+    //       indices.removeAt(index);
+    //       indptr = indptr.map((e) => e > row ? e - 1 : e).toList();
+    //     }
+    //   }
+    //   else {
+    //     if (row_indices.contains(col)) {
+    //       data[indptr[row] + row_indices.indexOf(col)] = value;
+    //     }
+    //     else {
+    //       int index = row_indices.indexWhere((e) => e > col);
+    //       if (index == -1) {
+    //         data.add(value);
+    //         indices.add(col);
+    //       }
+    //       else {
+    //         indices.insert(indptr[row] + index, col);
+    //       }
+    //       indptr = indptr.map((e) => e > row ? e + 1 : e).toList();
+    //     }
+    //   }
+    // }
+
+
+
+
+
+    // List<int> row_indices = [];
+    // if(!indptr.isEmpty&& !indices.isEmpty) {
+    //   row_indices = indices.sublist(indptr[row], indptr[row + 1]);
+    // }
+    //
+    // if (value == 0) {
+    //   if (row_indices.contains(col)) {
+    //     int index = indptr[row] + row_indices.indexOf(col);
+    //     data.removeAt(index);
+    //     indices.removeAt(index);
+    //     indptr = indptr.map((e) => e > index ? e - 1 : e).toList();
+    //   }
+    // }
+    // else {
+    //   if (row_indices.contains(col)) {
+    //     data[indptr[row] + row_indices.indexOf(col)] = value;
+    //   }
+    //   else {
+    //     int index = row_indices.indexWhere((e) => e > col);
+    //     if (index == -1) {
+    //       data.add(value);
+    //       indices.add(col);
+    //     }
+    //     else {
+    //       indices.insert(indptr[row] + index, col);
+    //     }
+    //     indptr = indptr.map((e) => e >= index ? e + 1 : e).toList();
+    //   }
   }
 
   SparceVector<T> row(int index) {
@@ -513,6 +654,34 @@ class CSRMatrixData<T extends num> extends MatrixData<T> {
       colLenght = row.length;
     }
   }
+
+  void addColumn(List<T> column) {
+    // if ( colLenght != 0 && column.length != rowLenght) { // todo check
+    //   throw Exception('Invalid number of values');
+    // }
+    for (int i = 0; i < rowLenght; i++) {
+      if (column[i] != 0) {
+        data.add(column[i]);
+        indices.add(i);
+      }
+    }
+    indptr.add(data.length);
+    colLenght++;
+  }
+
+  void setSize(int row, int col) {
+    rowLenght = row;
+    colLenght = col;
+    if (indptr.length == 0) {
+      indptr = List.filled(row+1, 0);
+      return;
+    }
+    while (indptr.length <= rowLenght) {
+      indptr.add(indptr.last);
+    }
+  }
+
+
 
 
 }
@@ -595,7 +764,75 @@ class MatrixSparceVectorRowIterator<T extends num> extends MatrixVectorRowIterat
 
 }
 
+class MapMatrixData<T extends num> extends MatrixData<T> {
 
+  String get type => 'map';
+
+  List<Map<int, T>> _data = [];
+
+  MapMatrixData(super.values);
+
+  MapMatrixData.c(this._data, int rowl, int coll): super.empty() {
+    rowLenght = rowl;
+    colLenght = coll;
+  }
+
+  @override
+  T get(int row, int col) => _data[row][col] ?? 0 as T;
+
+  @override
+  void set(int row, int col, T value) {
+    if (value == 0) {
+      _data[row].remove(col);
+    }
+    else {
+      _data[row][col] = value;
+    }
+  }
+
+  @override
+  Vector<T> row(int index) {
+    Vector<T> vec = SparceVector<T>.zeroes(colLenght);
+    _data[index].forEach((key, value) {
+      vec[key] = value;
+    });
+    return vec;
+  }
+
+  @override
+  void setSize(int row, int col) {
+    rowLenght = row;
+    colLenght = col;
+    while (_data.length < row) {
+      _data.add({});
+    }
+  }
+
+  void addRow(List<T> row) {
+    Map<int, T> row_map = {};
+    for (int i = 0; i < row.length; i++) {
+      if (row[i] != 0) {
+        row_map[i] = row[i];
+      }
+    }
+    _data.add(row_map);
+  }
+
+  @override
+  List<List<T>> get values {
+    List<List<T>> result = [];
+    for (int i = 0; i < rowLenght; i++) {
+      Vector<T> vec = SparceVector<T>.zeroes(colLenght);
+      _data[i].forEach((key, value) {
+        vec.addExtend(key, value);
+      });
+      result.add(vec.toList());
+    }
+    return result;
+  }
+
+
+}
 
 
 
