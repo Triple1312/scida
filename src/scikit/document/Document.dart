@@ -16,6 +16,15 @@ class Document {
 
   List<TextModifier> modifiers = []; // only used if text is not loaded
 
+  int size() {
+    if (contents == "") {
+      return file!.lengthSync();
+    }
+    else {
+      return _contents.length;
+    }
+  }
+
   String get contents {
     if (_contents != "") return _contents;
     String tmp = file!.readAsStringSync();

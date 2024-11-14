@@ -19,7 +19,9 @@ class TfIdfVectorizer extends Vectorizer {
   // Matrix fitMatrix = Matrix.csr();
   // HashMap<String, double> idfValues = new HashMap<String, double>();
   Map<int, Set<int>> documentFrequency = {}; // defines in what documents a word appears
+  Map<int, double> idfValues = {};
   List<Map<int, int>> doc_word_count = [];
+  Matrix data = Matrix.empty();
 
   // tested tftype: n, t // idftype: t // normtype: n, c // stopwords: language
   TfIdfVectorizer({String tfType = 'n', String idfType = 't', String normType = 'c', String stopwords = ''}) : _normType = normType, _idfType = idfType, _tfType = tfType, _stopwords = stopwords == 'english';
@@ -58,28 +60,29 @@ class TfIdfVectorizer extends Vectorizer {
   // different than other fit methods, resets vocab and doc count
   @override
   void fit(List<String> documents, {bool sorted = false} ) { // should not be called directly but possible if necessary // todo
-    docCount = documents.length;
-    for (int i = 0; i < documents.length; i++) {
-      Map<int, int> doc_map = {};
-      for (String word in documents[i].toLowerCase().split(" ")) {
-        if (!vocab.containsKey(word)) {
-          vocab[word] = vocab.length;
-          this.documentFrequency[vocab[word]!] = {};
-        }
-        if (!doc_map.containsKey(vocab[word])) {
-          doc_map[vocab[word]!] = 1;
-        }
-        else {
-          doc_map[vocab[word]!] = doc_map[vocab[word]]! + 1;
-        }
-        this.documentFrequency[vocab[word]!]!.add(i);   // = docFreq[vocab[word]!]! + 1;
-
-      }
-      doc_word_count.add(doc_map);
-      if (i % 10000 == 0) {
-        print(i);
-      }
-    }
+    fit_transform(documents);
+    // docCount = documents.length;
+    // for (int i = 0; i < documents.length; i++) {
+    //   Map<int, int> doc_map = {};
+    //   for (String word in documents[i].toLowerCase().split(" ")) {
+    //     if (!vocab.containsKey(word)) {
+    //       vocab[word] = vocab.length;
+    //       this.documentFrequency[vocab[word]!] = {};
+    //     }
+    //     if (!doc_map.containsKey(vocab[word])) {
+    //       doc_map[vocab[word]!] = 1;
+    //     }
+    //     else {
+    //       doc_map[vocab[word]!] = doc_map[vocab[word]]! + 1;
+    //     }
+    //     this.documentFrequency[vocab[word]!]!.add(i);   // = docFreq[vocab[word]!]! + 1;
+    //
+    //   }
+    //   doc_word_count.add(doc_map);
+    //   if (i % 10000 == 0) {
+    //     print(i);
+    //   }
+    // }
   }
 
   void fit_corpus(Corpus corpus) {
@@ -151,6 +154,43 @@ class TfIdfVectorizer extends Vectorizer {
     return Matrix<num>.map(final_ret_mat, corpus.length, vocab.length);
   }
 
+  List<(int, num)> new_query(String query, [int k = 10]) {
+
+    SparceVector<num> doc_vec = SparceVector.empty();
+    doc_vec.extend(vocab.length);
+    for (String word in query.split(" ")) {
+      int? v = vocab[word];
+      if (v != null) {
+        doc_vec[v] = doc_vec[v] + 1;
+      }
+    }
+    SparceVector<num> query_tfidf = SparceVector.empty();
+    for ((int, num) p in doc_vec.sparceIterator) {
+      query_tfidf[p.$1] = p.$2 * idfValues[p.$1]!;
+    }
+
+    /// transform done
+
+    List<(int, num)> scores = [];
+    num min = 0;
+
+    for (int j = 0; j < data.data.rowLenght; j++) {
+      Vector vecvec = data.row(j);
+      num sim = vecvec.dot(query_tfidf) / (vecvec.norm2() * query_tfidf.norm2());
+      if (sim < min) continue;
+      if (scores.length < k) {
+        scores.add((j, sim));
+        continue;
+      };
+      scores.add((j, sim));
+      scores.sort((a, b) => b.$2.compareTo(a.$2));
+      scores.removeLast();
+      min = scores.last.$2;
+    }
+    scores.sort((a, b) => b.$2.compareTo(a.$2));
+    return scores;
+  }
+
 
   @override
   Matrix<num> transform(List<String> documents) {
@@ -199,7 +239,7 @@ class TfIdfVectorizer extends Vectorizer {
   }
 
 
-  Matrix<num> ffff(List<String> corpus) {
+  Matrix<num> fit_transform(List<String> corpus, {bool sorted = false}) {
     docCount = corpus.length;
     for (int i = 0; i < corpus.length; i++) {
       Map<int, int> doc_map = {};
@@ -239,9 +279,15 @@ class TfIdfVectorizer extends Vectorizer {
         tfidfVector[term] = tfidfVector[term]! / norm;
       }
       final_ret_mat.add(tfidfVector);
-
     }
-    return Matrix<num>.map(final_ret_mat, corpus.length, vocab.length);
+
+    for (int voc in vocab.values) {
+      idfValues[voc] = _calculateIDF(this.documentFrequency[voc]!.length);
+    }
+    this.documentFrequency.clear();
+
+    data = Matrix<num>.map(final_ret_mat, corpus.length, vocab.length);
+    return data;
   }
 
 
@@ -298,74 +344,6 @@ class TfIdfVectorizer extends Vectorizer {
   //
   // }
 
-  @override
-  Matrix<num> fit_transform(List<String> documents, {bool sorted = false}) {
-    // docCount = documents.length;
-    // var termDocs = HashMap<String, Set<int>>();
-    // // HashMap<String, double> idfScores = HashMap<String, double>();
-    //
-    //
-    // var uniqueTerms = Set<String>(); // needed ??
-    //
-    // for (var i = 0; i < documents.length; i++) {
-    //   List<String> terms = documents[i].split(" ");
-    //   terms.removeWhere((term) => term == '' || term == ' ' || term == "." || term == "?" || term == "!" || term == "," || term == ":" || term == ";");
-    //   if (_stopwords) {
-    //     terms = terms.where((term) => !ENGLISH_STOP_WORDS.contains(term)).toList();
-    //   }
-    //   uniqueTerms = Set<String>.from(terms);
-    //   uniqueTerms.forEach((term) {
-    //     (termDocs[term] ??= {}).add(i);
-    //   });
-    // }
-    // termDocs.forEach((term, docs) {
-    //   idfValues[term] = _calculateIDF(docs.length);
-    // });
-    //
-    // for (var i = 0; i < documents.length; i++) {
-    //   List<String> terms = documents[i].split(" ");
-    //   if (_stopwords) {
-    //     terms = terms.where((term) => !ENGLISH_STOP_WORDS.contains(term)).toList();
-    //   }
-    //   uniqueTerms.addAll(terms);
-    // }
-    //
-    // // vocab = uniqueTerms.toList(); // this is the order
-    //
-    // Matrix tmp_m = Matrix.csr();
-    // for (var doc in documents) {
-    //   // Split the document into terms and optionally filter out stop words.
-    //   List<String> rawTerms = doc.split(" ");
-    //   List<String> terms = _stopwords ? rawTerms.where((term) => !ENGLISH_STOP_WORDS.contains(term)).toList() : rawTerms;
-    //
-    //   // Calculate term frequencies in one pass.
-    //   Map<String, int> termFreqs = {};
-    //   for (var term in terms) {
-    //     termFreqs[term] = (termFreqs[term] ?? 0) + 1;
-    //   }
-    //
-    //   // Determine the maximum term frequency for normalization.
-    //   int maxTF = termFreqs.values.reduce(max);
-    //
-    //   // Create the TF-IDF vector for the document.
-    //   Map<String, double> tfidfVector = termFreqs.map((term, count) {
-    //     double tf = _calculateTF(count.toDouble(), terms.length.toDouble(), maxTF);
-    //     return MapEntry(term, tf * (idfValues[term] ?? 0.0));
-    //   });
-    //
-    //   // Normalize the TF-IDF vector and convert it into a list using the vocabulary.
-    //   double norm = sqrt(tfidfVector.values.map((x) => x * x).reduce((a, b) => a + b));
-    //   SparceVector<double> tmp_vec = SparceVector.empty();
-    //   for (var word in vocab.keys) {
-    //     tmp_vec.add((tfidfVector[word] ?? 0.0) / norm);
-    //   }
-    //   // vocab.forEach((word) => tmp_vec.add(tfidfVector[word] ?? 0.0) / norm));
-    //   tmp_m.addRow(tmp_vec);
-    // }
-    // fitMatrix = tmp_m;
-    // return tmp_m;
-    return ffff(documents);
-  }
 
 
   // Matrix<num> firt_tr(Corpus corpus, {bool sorted = false}) {
@@ -373,8 +351,33 @@ class TfIdfVectorizer extends Vectorizer {
   // }
 
   Matrix<num> fit_transform_corpus(Corpus corpus, {bool sorted = false}) {
-    return ffff(corpus.docs.map((e) => e.contents).toList());
+    return fit_transform(corpus.docs.map((e) => e.contents).toList());
   }
+
+
+  // List<(int, num)> new_query(String query, [int k = 10]) {
+  //   List<num> queryVector = transform([query])[0];
+  //   Vector<num> vec = SparceVector(queryVector);
+  //
+  //   List<(int, num)> scores = [];
+  //   num min = 0;
+  //
+  //   for (int j = 0; j < data.data.rowLenght; j++) {
+  //     Vector vecvec = data.row(j);
+  //     num sim = vecvec.dot(vec) / (vecvec.norm2() * vec.norm2());
+  //     if (sim < min) continue;
+  //     if (scores.length < k) {
+  //       scores.add((j, sim));
+  //       continue;
+  //     };
+  //     scores.add((j, sim));
+  //     scores.sort((a, b) => b.$2.compareTo(a.$2));
+  //     scores.removeLast();
+  //     min = scores.last.$2;
+  //   }
+  //   scores.sort((a, b) => b.$2.compareTo(a.$2));
+  //   return scores;
+  // }
 
 
   List<(int, num)> query(String query, [int k = 10]) {

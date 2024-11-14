@@ -792,11 +792,7 @@ class MapMatrixData<T extends num> extends MatrixData<T> {
 
   @override
   Vector<T> row(int index) {
-    Vector<T> vec = SparceVector<T>.zeroes(colLenght);
-    _data[index].forEach((key, value) {
-      vec[key] = value;
-    });
-    return vec;
+    return MapVector.map(_data[index], colLenght);
   }
 
   @override
@@ -830,10 +826,29 @@ class MapMatrixData<T extends num> extends MatrixData<T> {
     }
     return result;
   }
-
-
 }
 
+
+class MapMatrixIterator<T extends num> implements Iterator<Vector> {
+
+  MapMatrixData _data;
+  int _currentIndex = -1;
+
+  MapMatrixIterator(this._data);
+
+  @override
+  get current => _data.row(_currentIndex);
+
+  @override
+  bool moveNext() {
+    if (_currentIndex < _data.rowLenght - 1) {
+      _currentIndex++;
+      return true;
+    }
+    return false;
+  }
+
+}
 
 
 

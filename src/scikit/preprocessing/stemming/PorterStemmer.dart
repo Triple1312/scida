@@ -200,10 +200,12 @@ class PorterStemmer implements TextModifier{
   }
 
   String stem_document(String document) {
-    List<String> words = (RegExp(r'\b[a-zA-Z]+(?:-[a-zA-Z]+)*\b|[.,!?;:"()&$]')).allMatches(document).map((match) => match.group(0)!).toList();
+    List<String> words = (RegExp(r'\b[a-zA-Z]+(?:-[a-zA-Z]+)*\b|[.,!?;:"()]')).allMatches(document).map((match) => match.group(0)!).toList();
     if (_stopwords) {
       words = removeStopWords(words, 'english');
     }
+    words.removeWhere((word) => word.contains(RegExp(r'[.,!?;:"()&$1234567890]')));
+    words.removeWhere((word) => word.length <= 3);
     return words.map((word) => stem(word)).join(" ");
   }
 

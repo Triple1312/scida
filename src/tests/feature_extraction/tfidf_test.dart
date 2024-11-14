@@ -79,7 +79,7 @@ void main() {
       String query = "the quick dog";
       TfIdfVectorizer tfidf = TfIdfVectorizer();
       tfidf.ffff(documents);
-      List<(int, num)> result = tfidf.query(query, 3);
+      List<(int, num)> result = tfidf.new_query(query, 3);
       expect(result, [(2, 0.7071067811865475), (1, 0.7071067811865475), (4, 0.7071067811865475)]);
     });
     test("test query", () {
@@ -98,7 +98,7 @@ void main() {
       String query = "fox jump over dog";
       TfIdfVectorizer tfidf = TfIdfVectorizer();
       tfidf.ffff(documents);
-      List<(int, num)> result = tfidf.query(query, 3);
+      List<(int, num)> result = tfidf.new_query(query, 3);
       expect(result, [(2, 0.7071067811865475), (1, 0.7071067811865475), (4, 0.7071067811865475)]);
     });
   });

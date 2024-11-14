@@ -1,53 +1,63 @@
 
 import 'dart:io';
+import 'dart:convert';
 
+import '../document/Corpus.dart';
 import '../document/Document.dart';
 import 'InvertedIndexer.dart';
 
 class SPIMI {
 
-  // todo check memory usage
-  SPIMI fit(String folderpath, int maxSizeBytes) {
-    final directory = Directory(folderpath);
-    if (directory.existsSync()) {
-      List<FileSystemEntity> files = directory.listSync(); // todo can also be other dirs ?
-      int currentsize = 0;
-      List<File> currentfiles = [];
-      for (int i = 0; i < files.length; i++) {
-        FileSystemEntity file = files[i];
-        if (file is File) {
-          int length = file.lengthSync();
-          if (currentsize + length > maxSizeBytes) {
-            List<Document> openedfiles = currentfiles.fold([], (a, f) => a + [new Document(f.path, f.readAsStringSync())]);
-            InvertedIndexer indexer = new InvertedIndexer()..fit(openedfiles, fileIndexStart: i);
+  void fit_corpus(Corpus corpus, int maxByteSize) {
+    int currentSize = 0;
+    List<Document> currentDocs = [];
+    int index = 0;
+    for (Document doc in corpus.docs) {
+      int docSize = doc.size();
+      if (docSize > maxByteSize) {
+        throw Exception("Document ${doc.filename} is too large for the maxByteSize");
+      }
+      if (currentSize + doc.size() > maxByteSize ) {
+        InvertedIndexer indexer = new InvertedIndexer()..fit(currentDocs);
+        writeTemp(indexer, "tmpSPIMI$index.json");
+        index++;
+      }
+      else {
+        currentDocs.add(doc);
+        currentSize += doc.size();
+      }
+    }
+    if (currentDocs.isNotEmpty) {
+      InvertedIndexer indexer = new InvertedIndexer()..fit(currentDocs);
+      writeTemp(indexer, "tmpSPIMI$index.json");
+    }
+    mergeAll();
+  }
 
-          }
-          else if (i == files.length - 1) {
-            currentfiles.add(file);
-            currentsize += length;
-          }
-          else {
-            currentfiles.add(file);
-            currentsize += length;
-          }
+  void mergeAll([String filename = "SPIMImerged.json"]) {
+    Directory dir = Directory.current;
+    List<FileSystemEntity> files = dir.listSync();
+    files.removeWhere((f) => !f.path.startsWith("tmpSPIMI"));
+    Map<String, List<int>> mergedIndex = jsonDecode((files[0] as File).readAsStringSync());
+    for (int i = 1; i < files.length; i++) {
+      Map<String, List<int>> index = jsonDecode((files[i] as File).readAsStringSync());
+      for (String term in index.keys) {
+        if (mergedIndex.containsKey(term)) {
+          mergedIndex[term] = (mergedIndex[term]! + index[term]!);
+        }
+        else {
+          mergedIndex[term] = index[term]!;
         }
       }
     }
-
-
+    File file = File(filename);
+    file.writeAsStringSync(jsonEncode(mergedIndex));
   }
 
-  void _saveIndexer(InvertedIndexer indexer, String folderPath) {
-    File file = File(folderPath + "/indexer.json");
-    file.writeAsStringSync(indexer.toJson());
 
+  void writeTemp(InvertedIndexer indexer, String filename) {
+    File file = new File(filename);
+    file.writeAsStringSync(jsonEncode(indexer.invertedIndex));
   }
-
-  // void fitAsync(String folderPath, int maxmemMB) async {
-  //
-  // }
-
-
-
 
 }
